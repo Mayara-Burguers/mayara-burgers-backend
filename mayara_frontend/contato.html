@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contato - Mayara Burguer's</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* === ESTILO UNIFICADO E REFINADO - MAYARA BURGUER'S === */
+    :root {
+      --preto-absoluto: #181818;
+      --cinza-fundo: #f4f4f7;
+      --branco-puro: #ffffff;
+      --cinza-texto: #2d3436;
+      --cinza-texto-suave: #636e72;
+      --cinza-borda: #dfe6e9;
+      --roxo-destaque: #6D28D9;
+      --roxo-destaque-hover: #7C3AED;
+      --raio-borda: 8px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background-color: var(--cinza-fundo);
+      color: var(--cinza-texto);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header,
+    footer {
+      background-color: var(--preto-absoluto);
+      padding: 1rem;
+      text-align: center;
+      color: var(--branco-puro);
+    }
+
+    header h1,
+    footer {
+      padding: 15px;
+    }
+
+    nav {
+      display: flex;
+      justify-content: center;
+      background-color: var(--preto-absoluto);
+      padding: 10px;
+      gap: 2rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #2a2a2a;
+    }
+
+    nav a {
+      color: #b2bec3;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease-in-out;
+    }
+
+    nav a:hover {
+      color: var(--roxo-destaque);
+    }
+
+    main {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2.5rem 1rem;
+      text-align: center;
+      flex-grow: 1;
+    }
+
+    .banner {
+      width: 100%;
+      height: auto;
+      border-radius: var(--raio-borda);
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--cinza-texto);
+    }
+
+    .menu-links {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 2rem;
+    }
+
+    .menu-links a {
+      background-color: var(--roxo-destaque);
+      color: white;
+      text-decoration: none;
+      padding: 15px;
+      border-radius: var(--raio-borda);
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .menu-links a:hover {
+      background-color: var(--roxo-destaque-hover);
+      transform: scale(1.02);
+    }
+
+    .sobre-texto,
+    .info-box {
+      background-color: var(--branco-puro);
+      border-left: 4px solid var(--roxo-destaque);
+      border-radius: var(--raio-borda);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      text-align: left;
+      border: 1px solid var(--cinza-borda);
+    }
+
+    .info-box p,
+    .sobre-texto p {
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+
+    .info-box p:last-child,
+    .sobre-texto p:last-child {
+      margin-bottom: 0;
+    }
+
+    .destaque {
+      background-color: var(--cinza-escuro);
+      color: white;
+      padding: 1.5rem;
+      border-radius: var(--raio-borda);
+      text-align: center;
+    }
+
+    .destaque h3 {
+      margin-bottom: 0.5rem;
+      color: var(--roxo-destaque);
+    }
+
+    .social-links a {
+      color: #ffffff;
+      text-decoration: none;
+      padding: 8px 15px;
+      border-radius: 6px;
+      font-weight: 500;
+      text-align: center;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .social-links a:hover {
+      opacity: 0.85;
+    }
+
+    .instagram-btn {
+      background: linear-gradient(135deg, #a832a4, #f58529);
+    }
+
+    .facebook-btn {
+      background: #1877F2;
+    }
+
+    .maps-btn {
+      background: #34A853;
+    }
+
+    .whatsapp-btn a {
+      background-color: #25d366;
+      color: white;
+      padding: 12px 25px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: bold;
+      display: inline-block;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .whatsapp-btn a:hover {
+      background-color: #1ebf5d;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>📞 Contato</h1>
+  </header>
+  <nav>
+    <a href="Site_lanchonete.html">Início</a>
+    <a href="cardapio.html">Cardápio</a>
+    <a href="sobre.html">Sobre</a>
+  </nav>
+  <main>
+    <h2>Fale Conosco</h2>
+
+    <div class="info-box">
+      <p><strong>Endereço:</strong><br>Rua José Vicente de Barros, 3022 – Parque São Luís, Taubaté/SP</p>
+      <p><strong>Horário:</strong><br>Ter a Qui: 18h às 23h | Sex a Dom: 18h à 01h</p>
+    </div>
+
+    <div class="info-box social-links">
+      <p><strong>Nosso Instagram</strong> <a href="https://www.instagram.com/mayaraburguers/"
+          class="instagram-btn">@mayaraburgers</a></p>
+      <p><strong>Nosso Facebook</strong><a href="https://pt-br.facebook.com/mayara.burguers/"
+          class="facebook-btn">Mayara Burguer's</a></p>
+      <p><strong>Encontre no Maps</strong> <a
+          href="https://www.google.com/maps/search/?api=1&query=Av.+Jos%C3%A9+Vicente+de+Barros,+3022,+Parque+S%C3%A3o+Lu%C3%ADs,+Taubat%C3%A9,SP"
+          class="maps-btn">Ver Localização</a></p>
+    </div>
+
+    <div class="whatsapp-btn">
+      <a href="https://wa.me/5512992050080" target="_blank">Fale pelo WhatsApp</a>
+    </div>
+
+  </main>
+  <footer>
+    © 2025 Mayara Burguer's. Todos os direitos reservados.
+  </footer>
+</body>
+
+</html>

@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Mayara Burguer's</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --preto-absoluto: #181818;
+            --cinza-fundo: #f4f4f7;
+            --branco-puro: #ffffff;
+            --cinza-texto: #2d3436;
+            --cinza-borda: #dfe6e9;
+            --roxo-destaque: #6D28D9;
+            --vermelho-acao: #d63031;
+            --azul-acao: #0984e3;
+            --amarelo-acao: #f9ca24;
+            --verde-acao: #27ae60;
+            --raio-borda: 8px;
+            --sombra-padrao: 0 4px 15px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--cinza-fundo);
+            color: var(--cinza-texto);
+        }
+
+        .header-admin {
+            background-color: var(--preto-absoluto);
+            color: var(--branco-puro);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+
+        .admin-nav {
+            display: flex;
+            border-bottom: 2px solid var(--cinza-borda);
+            margin-bottom: 2rem;
+        }
+
+        .admin-nav-item {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: #636e72;
+        }
+
+        .admin-nav-item.active {
+            color: var(--roxo-destaque);
+            border-bottom: 2px solid var(--roxo-destaque);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card-admin,
+        .table-container {
+            background-color: var(--branco-puro);
+            border: 1px solid var(--cinza-borda);
+            border-radius: var(--raio-borda);
+            box-shadow: var(--sombra-padrao);
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+        }
+
+        .btn-principal {
+            background-color: var(--roxo-destaque);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: var(--raio-borda);
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--cinza-borda);
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: #fafafa;
+        }
+
+        .btn-action {
+            border: none;
+            padding: 6px 12px;
+            border-radius: var(--raio-borda);
+            cursor: pointer;
+            color: white;
+            font-weight: 500;
+            margin: 2px;
+        }
+
+        .edit-btn {
+            background-color: var(--azul-acao);
+        }
+
+        .delete-btn {
+            background-color: var(--vermelho-acao);
+        }
+
+        h3.category-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--roxo-destaque);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--roxo-destaque);
+        }
+
+        .date-group {
+            margin-bottom: 2rem;
+        }
+
+        .date-header {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--roxo-destaque);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--roxo-destaque);
+        }
+
+        .order-card {
+            background-color: var(--branco-puro);
+            border: 1px solid var(--cinza-borda);
+            border-left: 5px solid #636e72;
+            border-radius: var(--raio-borda);
+            box-shadow: var(--sombra-padrao);
+            margin-bottom: 1.5rem;
+        }
+
+        .order-card.status-recebido {
+            border-left-color: var(--azul-acao);
+        }
+
+        .order-card.status-em-preparo {
+            border-left-color: var(--amarelo-acao);
+        }
+
+        .order-card.status-finalizado,
+        .order-card.status-pronto-para-retirada,
+        .order-card.status-saiu-para-entrega {
+            border-left-color: var(--verde-acao);
+        }
+
+        .order-card.status-cancelado {
+            border-left-color: var(--vermelho-acao);
+            opacity: 0.7;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 700px;
+            border-radius: var(--raio-borda);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--cinza-borda);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--cinza-borda);
+            border-radius: var(--raio-borda);
+        }
+
+        .form-add-ingrediente {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .receita-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid var(--cinza-borda);
+        }
+
+        .receita-item button {
+            background: var(--vermelho-acao);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="header-admin">
+        <h1>Painel Administrativo</h1>
+        <a href="cardapio.html">Ver Site</a>
+    </header>
+
+    <main id="main-admin">
+        <nav class="admin-nav">
+            <div class="admin-nav-item active" data-tab="pedidos">Histórico de Pedidos</div>
+            <div class="admin-nav-item" data-tab="estoque">Controle de Estoque</div>
+            <div class="admin-nav-item" data-tab="produtos">Gerenciar Cardápio</div>
+        </nav>
+
+        <div id="tab-pedidos" class="tab-content active">
+            <div id="historico-container">
+                <p>Carregando pedidos...</p>
+            </div>
+        </div>
+
+        <div id="tab-estoque" class="tab-content">
+            <div class="card-admin">
+                <h3>Adicionar Novo Ingrediente</h3>
+                <form id="form-add-ingrediente" class="mt-3 form-add-ingrediente">
+                    <div class="form-group"><label for="nome-ingrediente">Nome</label><input type="text"
+                            id="nome-ingrediente" required></div>
+                    <div class="form-group"><label for="qtd-ingrediente">Quantidade</label><input type="number"
+                            step="0.01" id="qtd-ingrediente" required></div>
+                    <div class="form-group"><label for="unidade-ingrediente">Unidade</label><input type="text"
+                            id="unidade-ingrediente" placeholder="ex: un, g, kg, L" required></div>
+                    <button type="submit" class="btn-principal" style="height:38px;">Adicionar</button>
+                </form>
+            </div>
+            <div class="table-container">
+                <table id="estoque-table">
+                    <thead>
+                        <tr>
+                            <th>Ingrediente</th>
+                            <th>Estoque Atual</th>
+                            <th>Unidade</th>
+                            <th>Novo Valor</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="estoque-container">
+                        <p>Carregando estoque...</p>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-produtos" class="tab-content">
+            <div class="card-admin">
+                <h3>Adicionar Nova Categoria</h3>
+                <form id="form-add-categoria" class="mt-3 form-add-ingrediente">
+                    <div class="form-group"><label for="nome-categoria">Nome da Categoria</label><input type="text"
+                            id="nome-categoria" required></div>
+                    <div class="form-group"><label for="ordem-categoria">Ordem de Exibição</label><input type="number"
+                            id="ordem-categoria" placeholder="Ex: 10, 20, 30..." required></div>
+                    <button type="submit" class="btn-principal" style="height:38px;">Salvar Categoria</button>
+                </form>
+            </div>
+            <button id="btn-add-produto" class="btn-principal">Adicionar Novo Produto</button>
+            <div id="produtos-list-container"></div>
+        </div>
+    </main>
+
+    <div id="modal-produto" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-produto-titulo">Adicionar Produto</h2>
+                <span class="close-btn">&times;</span>
+            </div>
+            <form id="form-produto">
+                <input type="hidden" id="produto-id">
+                <div class="form-grid">
+                    <div class="form-group full-width"><label for="produto-nome">Nome do Produto</label><input
+                            type="text" id="produto-nome" required></div>
+                    <div class="form-group full-width"><label for="produto-descricao">Descrição</label><textarea
+                            id="produto-descricao" rows="2"></textarea></div>
+                    <div class="form-group"><label for="produto-preco-base">Preço Base (R$)</label><input type="number"
+                            step="0.01" id="produto-preco-base" required></div>
+                    <div class="form-group"><label for="produto-categoria">Categoria</label><select
+                            id="produto-categoria" required></select></div>
+                    <div class="form-group"><label for="produto-subcategoria">Subcategoria (p/ Bebidas,
+                            Pastéis)</label><input type="text" id="produto-subcategoria"></div>
+                    <div class="form-group"><label for="produto-imagem">URL da Imagem</label><input type="text"
+                            id="produto-imagem" placeholder="ex: lanche.jpg"></div>
+                    <div class="form-group"><label for="produto-preco-especial">Preço Pão Especial/Francês
+                            (R$)</label><input type="number" step="0.01" id="produto-preco-especial"></div>
+                    <div class="form-group"><label for="produto-preco-baby">Preço Pão Baby (R$)</label><input
+                            type="number" step="0.01" id="produto-preco-baby"></div>
+                </div>
+                <hr>
+                <h3>Receita do Produto</h3>
+                <div id="receita-list"></div>
+                <div id="form-receita" class="form-grid" style="margin-top: 1rem; align-items: flex-end;">
+                    <div class="form-group"><label for="receita-ingrediente">Ingrediente</label><select
+                            id="receita-ingrediente"></select></div>
+                    <div class="form-group"><label for="receita-qtd">Quantidade Usada</label><input type="number"
+                            step="0.01" id="receita-qtd"></div>
+                    <button type="button" id="btn-add-receita" class="btn-principal"
+                        style="height: 38px;">Adicionar</button>
+                </div>
+                <button type="submit" class="btn-principal" style="margin-top: 1.5rem;">Salvar Produto e
+                    Receita</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const mainAdmin = document.getElementById("main-admin");
+            const modalProduto = document.getElementById('modal-produto');
+            const formProduto = document.getElementById('form-produto');
+
+            let categoriasData = [];
+            let produtosData = [];
+            let receitaAtual = [];
+
+            // FUNÇÕES DE RENDERIZAÇÃO
+            async function renderizarPedidos() {
+                const container = document.getElementById("historico-container");
+                try {
+                    const response = await fetch('http://localhost:3001/api/pedidos');
+                    if (!response.ok) throw new Error('Falha ao buscar pedidos');
+                    const pedidos = await response.json();
+
+                    container.innerHTML = "";
+                    if (pedidos.length === 0) {
+                        container.innerHTML = '<div class="card-admin"><p>Nenhum pedido no histórico.</p></div>';
+                        return;
+                    }
+
+                    const pedidosAgrupados = pedidos.reduce((acc, pedido) => {
+                        const data = new Date(pedido.data_hora).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                        (acc[data] = acc[data] || []).push(pedido);
+                        return acc;
+                    }, {});
+
+                    for (const dataString in pedidosAgrupados) {
+                        const dateGroupDiv = document.createElement('div');
+                        dateGroupDiv.className = 'date-group';
+                        dateGroupDiv.innerHTML = `<h3 class="date-header">${dataString}</h3>`;
+                        pedidosAgrupados[dataString].forEach(pedido => {
+                            let itensHtml = '';
+                            pedido.itens.forEach(item => {
+                                itensHtml += `<div class="item-detail" style="border-bottom: 1px dashed #ccc; margin-bottom: 5px; padding-bottom: 5px;"><p><strong>${item.quantidade}x ${item.produto_nome}</strong></p><small>${item.adicionais ? `Adcs: ${item.adicionais}<br>` : ''}${item.observacoes ? `Obs: ${item.observacoes}` : ''}</small></div>`;
+                            });
+                            const statusOptions = ['Recebido', 'Em Preparo', 'Pronto para Retirada', 'Saiu para Entrega', 'Finalizado', 'Cancelado'].map(s => `<option value="${s}" ${pedido.status === s ? 'selected' : ''}>${s}</option>`).join('');
+                            const statusSlug = pedido.status.toLowerCase().replace(/\s+/g, '-');
+                            const card = document.createElement("div");
+                            card.className = `order-card status-${statusSlug}`;
+                            card.innerHTML = `<div class="order-header"><span class="order-number">Pedido #${pedido.id}</span><span class="order-time">${new Date(pedido.data_hora).toLocaleTimeString('pt-BR')}</span></div><div class="order-body"><div class="details-grid"><div style="padding-right:1rem;"><h3>Cliente</h3><p><strong>Nome:</strong> ${pedido.cliente_nome}</p><p><strong>Telefone:</strong> ${pedido.cliente_telefone || 'Não informado'}</p><p><strong>Entrega:</strong> ${pedido.tipo_entrega === 'retirada' ? 'Retirada no Balcão' : pedido.cliente_endereco}</p></div><div class="order-items"><h3>Itens</h3>${itensHtml}</div><div class="order-summary"><h3>Resumo</h3><p><strong>Molhos:</strong> ${pedido.molhos || 'Nenhum'}</p><p><strong>Sachês:</strong> ${pedido.saches_alho || 0}</p><div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid #333; text-align: right; font-size: 1.3rem; font-weight: 700;">Total: <span style="color:var(--roxo-destaque)">${parseFloat(pedido.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div></div></div><div style="border-top: 1px solid var(--cinza-borda); margin-top: 1rem; padding-top: 1rem; display: flex; align-items: center; gap: 1rem;"><label for="status-${pedido.id}" style="font-weight: 500;">Status:</label><select id="status-${pedido.id}" style="flex:1; padding: 8px;">${statusOptions}</select><button class="btn-action update-status-btn" data-id="${pedido.id}">Atualizar</button></div></div>`;
+                            dateGroupDiv.appendChild(card);
+                        });
+                        container.appendChild(dateGroupDiv);
+                    }
+                } catch (error) { console.error('Erro ao buscar pedidos:', error); container.innerHTML = '<p style="color: red;">Erro ao carregar pedidos.</p>'; }
+            }
+
+            async function renderizarEstoque() {
+                const container = document.getElementById("estoque-container");
+                try {
+                    const response = await fetch('http://localhost:3001/api/ingredientes');
+                    const ingredientes = await response.json();
+                    container.innerHTML = "";
+                    ingredientes.forEach(ing => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `<td>${ing.nome}</td><td>${ing.quantidade_estoque}</td><td>${ing.unidade}</td><td><input type="number" step="0.01" class="stock-input" id="stock-input-${ing.id}"></td><td><button class="btn-action update-stock-btn" data-id="${ing.id}">Atualizar</button><button class="btn-action delete-btn" data-id="${ing.id}">Apagar</button></td>`;
+                        container.appendChild(row);
+                    });
+                } catch (error) { console.error('Erro ao buscar estoque:', error); }
+            }
+
+            async function renderizarProdutos() {
+                const container = document.getElementById("produtos-list-container");
+                try {
+                    const resProdutos = await fetch('http://localhost:3001/api/produtos');
+                    produtosData = await resProdutos.json();
+                    if (categoriasData.length === 0) {
+                        const resCategorias = await fetch('http://localhost:3001/api/categorias');
+                        categoriasData = await resCategorias.json();
+                    }
+                    const produtosAgrupados = produtosData.reduce((acc, produto) => {
+                        const catNome = produto.categoria_nome || 'Outros';
+                        (acc[catNome] = acc[catNome] || []).push(produto);
+                        return acc;
+                    }, {});
+                    container.innerHTML = '';
+                    for (const nomeCategoria in produtosAgrupados) {
+                        let tableHtml = `<h3 class="category-title">${nomeCategoria}</h3><div class="table-container"><table><thead><tr><th>Nome</th><th>Preço Base</th><th>Ações</th></tr></thead><tbody>`;
+                        produtosAgrupados[nomeCategoria].forEach(p => {
+                            tableHtml += `<tr><td>${p.nome}</td><td>${p.preco_base.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td><td><button class="btn-action edit-btn" data-id="${p.id}">Editar</button><button class="btn-action delete-btn" data-id="${p.id}">Apagar</button></td></tr>`;
+                        });
+                        tableHtml += `</tbody></table></div>`;
+                        container.innerHTML += tableHtml;
+                    }
+                } catch (error) { console.error("Erro ao renderizar produtos:", error); }
+            }
+
+            // LÓGICA DO MODAL
+            async function abrirModalProduto(produto = null) {
+                formProduto.reset();
+                document.getElementById('produto-categoria').innerHTML = categoriasData.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+                await popularSelectIngredientes();
+                receitaAtual = [];
+                if (produto) {
+                    document.getElementById('modal-produto-titulo').textContent = 'Editar Produto';
+                    document.getElementById('produto-id').value = produto.id;
+                    document.getElementById('produto-nome').value = produto.nome;
+                    document.getElementById('produto-descricao').value = produto.descricao;
+                    document.getElementById('produto-preco-base').value = produto.preco_base;
+                    document.getElementById('produto-categoria').value = produto.categoria_id;
+                    document.getElementById('produto-subcategoria').value = produto.subcategoria || '';
+                    document.getElementById('produto-imagem').value = produto.imagem_url || '';
+                    document.getElementById('produto-preco-especial').value = produto.preco_pao_especial || '';
+                    document.getElementById('produto-preco-baby').value = produto.preco_pao_baby || '';
+                    try {
+                        const res = await fetch(`http://localhost:3001/api/produtos/${produto.id}/receita`);
+                        receitaAtual = await res.json();
+                    } catch (error) { console.error("Erro ao buscar receita:", error); }
+                } else {
+                    document.getElementById('modal-produto-titulo').textContent = 'Adicionar Novo Produto';
+                    document.getElementById('produto-id').value = '';
+                }
+                renderizarListaReceita();
+                modalProduto.style.display = 'block';
+            }
+
+            async function popularSelectIngredientes() {
+                const select = document.getElementById('receita-ingrediente');
+                try {
+                    const res = await fetch('http://localhost:3001/api/ingredientes');
+                    const ingredientes = await res.json();
+                    select.innerHTML = ingredientes.map(i => `<option value="${i.id}" data-unidade="${i.unidade}">${i.nome}</option>`).join('');
+                } catch (error) { console.error("Erro ao popular ingredientes:", error); }
+            }
+
+            function renderizarListaReceita() {
+                const container = document.getElementById('receita-list');
+                container.innerHTML = '';
+                receitaAtual.forEach((item, index) => {
+                    container.innerHTML += `<div class="receita-item" data-index="${index}"><span>${item.ingrediente_nome} - ${item.quantidade_usada} ${item.unidade || ''}</span><button type="button" class="btn-action delete-btn">&times;</button></div>`;
+                });
+            }
+
+            // EVENTOS DE AÇÃO
+            mainAdmin.addEventListener('click', async (e) => {
+                const target = e.target;
+                if (target.matches('.admin-nav-item')) {
+                    document.querySelectorAll('.admin-nav-item, .tab-content').forEach(el => el.classList.remove('active'));
+                    target.classList.add('active');
+                    document.getElementById(`tab-${target.dataset.tab}`).classList.add('active');
+                }
+                if (target.id === 'btn-add-produto') abrirModalProduto();
+                if (target.matches('.update-stock-btn')) {
+                    const id = target.dataset.id;
+                    const input = document.getElementById(`stock-input-${id}`);
+                    if (input.value === '') return;
+                    await fetch(`http://localhost:3001/api/ingredientes/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantidade_estoque: input.value }) });
+                    renderizarEstoque();
+                }
+                if (target.matches('.delete-btn') && target.closest('#estoque-table')) {
+                    const id = target.dataset.id;
+                    if (confirm('Tem certeza?')) {
+                        await fetch(`http://localhost:3001/api/ingredientes/${id}`, { method: 'DELETE' });
+                        renderizarEstoque();
+                    }
+                }
+                if (target.matches('.edit-btn') && target.closest('#produtos-list-container')) {
+                    const id = target.dataset.id;
+                    const produto = produtosData.find(p => p.id == id);
+                    if (produto) abrirModalProduto(produto);
+                }
+                if (target.matches('.delete-btn') && target.closest('#produtos-list-container')) {
+                    const id = target.dataset.id;
+                    if (confirm('Tem certeza?')) {
+                        await fetch(`http://localhost:3001/api/produtos/${id}`, { method: 'DELETE' });
+                        renderizarProdutos();
+                    }
+                }
+                if (target.matches('.update-status-btn')) {
+                    const id = target.dataset.id;
+                    const status = document.getElementById(`status-${id}`).value;
+                    await fetch(`http://localhost:3001/api/pedidos/${id}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+                    renderizarPedidos();
+                }
+            });
+
+            document.querySelector('#modal-produto .close-btn').onclick = () => modalProduto.style.display = 'none';
+            document.getElementById('btn-add-receita').addEventListener('click', () => {
+                const select = document.getElementById('receita-ingrediente');
+                const ingrediente_id = parseInt(select.value);
+                const selectedOption = select.options[select.selectedIndex];
+                const ingrediente_nome = selectedOption.text.split('(')[0].trim();
+                const unidade = selectedOption.dataset.unidade;
+                const quantidade_usada = parseFloat(document.getElementById('receita-qtd').value);
+                if (!ingrediente_id || !quantidade_usada) return;
+                receitaAtual.push({ ingrediente_id, ingrediente_nome, quantidade_usada, unidade });
+                renderizarListaReceita();
+                document.getElementById('receita-qtd').value = '';
+            });
+
+            document.getElementById('receita-list').addEventListener('click', e => {
+                if (e.target.matches('.delete-btn')) {
+                    const index = parseInt(e.target.parentElement.dataset.index);
+                    receitaAtual.splice(index, 1);
+                    renderizarListaReceita();
+                }
+            });
+
+            document.getElementById('form-add-ingrediente').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const data = { nome: document.getElementById('nome-ingrediente').value, quantidade_estoque: document.getElementById('qtd-ingrediente').value, unidade: document.getElementById('unidade-ingrediente').value };
+                await fetch('http://localhost:3001/api/ingredientes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                e.target.reset();
+                renderizarEstoque();
+            });
+
+            document.getElementById('form-add-categoria').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const data = { nome: document.getElementById('nome-categoria').value, ordem: document.getElementById('ordem-categoria').value };
+                await fetch('http://localhost:3001/api/categorias', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                alert('Categoria adicionada!');
+                e.target.reset();
+                const res = await fetch('http://localhost:3001/api/categorias');
+                categoriasData = await res.json();
+            });
+
+            formProduto.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const id = document.getElementById('produto-id').value;
+                const data = {
+                    nome: document.getElementById('produto-nome').value,
+                    descricao: document.getElementById('produto-descricao').value,
+                    preco_base: parseFloat(document.getElementById('produto-preco-base').value),
+                    categoria_id: parseInt(document.getElementById('produto-categoria').value),
+                    subcategoria: document.getElementById('produto-subcategoria').value || null,
+                    imagem_url: document.getElementById('produto-imagem').value || 'placeholder.jpg',
+                    preco_pao_especial: parseFloat(document.getElementById('produto-preco-especial').value) || null,
+                    preco_pao_baby: parseFloat(document.getElementById('produto-preco-baby').value) || null,
+                    receita: receitaAtual.map(({ ingrediente_id, quantidade_usada }) => ({ ingrediente_id, quantidade_usada }))
+                };
+                const method = id ? 'PUT' : 'POST';
+                const url = id ? `http://localhost:3001/api/produtos/${id}` : `http://localhost:3001/api/produtos`;
+                const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                if (response.ok) {
+                    alert('Produto salvo com sucesso!');
+                    modalProduto.style.display = 'none';
+                    renderizarProdutos();
+                } else {
+                    alert('Falha ao salvar produto.');
+                }
+            });
+
+            // CARREGAMENTO INICIAL
+            await Promise.all([renderizarPedidos(), renderizarEstoque(), renderizarProdutos()]);
+        });
+    </script>
+</body>
+
+</html>
