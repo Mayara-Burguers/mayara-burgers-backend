@@ -142,7 +142,7 @@
             async function renderizarPedidos() {
                 const container = document.getElementById("historico-container");
                 try {
-                    const response = await fetch('http://localhost:3001/api/pedidos');
+                    const response = await fetch('https://mayara-backend-servidor.onrender.com/api/pedidos');
                     const pedidos = await response.json();
                     container.innerHTML = "";
                     if (pedidos.length === 0) {
@@ -178,7 +178,7 @@
             async function renderizarEstoque() {
                 const container = document.getElementById("estoque-container");
                 try {
-                    const response = await fetch('http://localhost:3001/api/ingredientes');
+                    const response = await fetch('https://mayara-backend-servidor.onrender.com/api/ingredientes');
                     ingredientesData = await response.json();
                     container.innerHTML = "";
                     ingredientesData.forEach(ing => {
@@ -192,10 +192,10 @@
             async function renderizarProdutos() {
                 const container = document.getElementById("produtos-list-container");
                 try {
-                    const resProdutos = await fetch('http://localhost:3001/api/produtos');
+                    const resProdutos = await fetch('https://mayara-backend-servidor.onrender.com/api/produtos');
                     produtosData = await resProdutos.json();
                     if (categoriasData.length === 0) {
-                        const resCategorias = await fetch('http://localhost:3001/api/categorias');
+                        const resCategorias = await fetch('https://mayara-backend-servidor.onrender.com/api/categorias');
                         categoriasData = await resCategorias.json();
                     }
                     const produtosAgrupados = produtosData.reduce((acc, produto) => {
@@ -233,7 +233,7 @@
                     document.getElementById('produto-preco-especial').value = produto.preco_pao_especial || '';
                     document.getElementById('produto-preco-baby').value = produto.preco_pao_baby || '';
                     try {
-                        const res = await fetch(`http://localhost:3001/api/produtos/${produto.id}/receita`);
+                        const res = await fetch(`https://mayara-backend-servidor.onrender.com/api/produtos/${produto.id}/receita`);
                         receitaAtual = await res.json();
                     } catch (error) { console.error("Erro ao buscar receita:", error); }
                 } else {
@@ -274,13 +274,13 @@
                     const id = target.dataset.id;
                     const input = document.getElementById(`stock-input-${id}`);
                     if (input.value === '') return;
-                    await fetch(`http://localhost:3001/api/ingredientes/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantidade_estoque: input.value }) });
+                    await fetch(`https://mayara-backend-servidor.onrender.com/api/ingredientes/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantidade_estoque: input.value }) });
                     renderizarEstoque();
                 }
                 else if (target.matches('.delete-btn') && target.closest('#estoque-table')) {
                     const id = target.dataset.id;
                     if (confirm('Tem certeza?')) {
-                        await fetch(`http://localhost:3001/api/ingredientes/${id}`, { method: 'DELETE' });
+                        await fetch(`https://mayara-backend-servidor.onrender.com/api/ingredientes/${id}`, { method: 'DELETE' });
                         renderizarEstoque();
                     }
                 }
@@ -292,14 +292,14 @@
                 else if (target.matches('.delete-btn') && target.closest('#produtos-list-container')) {
                     const id = target.dataset.id;
                     if (confirm('Tem certeza?')) {
-                        await fetch(`http://localhost:3001/api/produtos/${id}`, { method: 'DELETE' });
+                        await fetch(`https://mayara-backend-servidor.onrender.com/api/produtos/${id}`, { method: 'DELETE' });
                         renderizarProdutos();
                     }
                 }
                 else if (target.matches('.update-status-btn')) {
                     const id = target.dataset.id;
                     const status = document.getElementById(`status-${id}`).value;
-                    await fetch(`http://localhost:3001/api/pedidos/${id}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+                    await fetch(`https://mayara-backend-servidor.onrender.com/api/pedidos/${id}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
                     renderizarPedidos();
                 }
             });
@@ -331,7 +331,7 @@
             document.getElementById('form-add-ingrediente').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const data = { nome: document.getElementById('nome-ingrediente').value, quantidade_estoque: document.getElementById('qtd-ingrediente').value, unidade: document.getElementById('unidade-ingrediente').value };
-                await fetch('http://localhost:3001/api/ingredientes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                await fetch('https://mayara-backend-servidor.onrender.com/api/ingredientes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
                 e.target.reset();
                 renderizarEstoque();
             });
@@ -339,10 +339,10 @@
             document.getElementById('form-add-categoria').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const data = { nome: document.getElementById('nome-categoria').value, ordem: document.getElementById('ordem-categoria').value };
-                await fetch('http://localhost:3001/api/categorias', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                await fetch('https://mayara-backend-servidor.onrender.com/api/categorias', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
                 alert('Categoria adicionada!');
                 e.target.reset();
-                const res = await fetch('http://localhost:3001/api/categorias');
+                const res = await fetch('https://mayara-backend-servidor.onrender.com/api/categorias');
                 categoriasData = await res.json();
             });
 
@@ -361,7 +361,7 @@
                     receita: receitaAtual.map(({ingrediente_id, quantidade_usada}) => ({ingrediente_id, quantidade_usada}))
                 };
                 const method = id ? 'PUT' : 'POST';
-                const url = id ? `http://localhost:3001/api/produtos/${id}` : `http://localhost:3001/api/produtos`;
+                const url = id ? `https://mayara-backend-servidor.onrender.com/api/produtos/${id}` : `https://mayara-backend-servidor.onrender.com/api/produtos`;
                 const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
                 if (response.ok) {
                     alert('Produto salvo com sucesso!');
