@@ -137,15 +137,17 @@
             let ingredientesData = [];
             let receitaAtual = [];
 
-            const BASE_URL = 'http://localhost:3001/api';
+            // IMPORTANTE: Cole a URL do seu backend do Render aqui!
+            const BASE_URL = 'https://mayara-backend-servidor.onrender.com/api'; // <--- TROQUE PELA SUA URL
 
             async function fetchData(endpoint) {
                 try {
                     const response = await fetch(`${BASE_URL}${endpoint}`);
-                    if (!response.ok) throw new Error(`Erro na rede ao buscar ${endpoint}`);
+                    if (!response.ok) throw new Error(`Erro na rede ao buscar ${endpoint}: ${response.statusText}`);
                     return await response.json();
                 } catch (error) {
                     console.error(`Erro em fetchData(${endpoint}):`, error);
+                    alert(`Não foi possível carregar os dados de ${endpoint}. Verifique o console para mais detalhes.`);
                     return [];
                 }
             }
