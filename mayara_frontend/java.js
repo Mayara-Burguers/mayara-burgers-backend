@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 1. ELEMENTOS E DADOS GLOBAIS
     // IMPORTANTE: Cole a URL do seu backend do Render aqui!
-    const BASE_URL = 'https://mayara-burgers-backend.onrender.com'; // <--- TROQUE PELA SUA URL
+    const BASE_URL = 'https://https://mayara-backend-servidor.onrender.com'; // <--- TROQUE PELA SUA URL
 
     const menuContainer = document.getElementById('menu-container');
     const navContainer = document.getElementById('nav-categorias');
