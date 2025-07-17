@@ -1,8 +1,8 @@
 /*
 ================================================================================
-| SERVIDOR BACKEND COMPLETO - MAYARA BURGUER'S (VERSÃO SUPABASE)               |
-| Este arquivo foi totalmente refatorado para usar o cliente @supabase/supabase-js |
-| e funcionar corretamente no Render.                                          |
+| SERVIDOR BACKEND COMPLETO - MAYARA BURGUER'S (VERSÃO CORRIGIDA)              |
+| - Nomes das tabelas ajustados para minúsculas.                               |
+| - Rota de produtos simplificada para garantir funcionamento.                 |
 ================================================================================
 */
 
@@ -49,20 +49,37 @@ app.get('/', (req, res) => {
 // --- ROTAS DE PRODUTOS ---
 app.get('/api/produtos', async (req, res) => {
     try {
-        // Equivalente a: SELECT p.*, c.nome AS categoria_nome FROM Produtos p JOIN categorias c ...
-        const { data, error } = await supabase
-            .from('Produtos')
-            .select('*, categoria_nome:categorias(nome)') // Pega tudo de Produtos e o nome da Categoria relacionada
-            .order('id', { foreignTable: 'categorias', ascending: true })
-            .order('id', { ascending: true });
+        // Passo 1: Pega todas as categorias e cria um mapa para consulta rápida
+        const { data: categorias, error: categoriasError } = await supabase
+            .from('categorias')
+            .select('id, nome');
+        if (categoriasError) throw categoriasError;
+        
+        const mapaCategorias = new Map();
+        for (const cat of categorias) {
+            mapaCategorias.set(cat.id, cat.nome);
+        }
 
-        if (error) throw error;
-        res.status(200).json(data);
+        // Passo 2: Pega todos os produtos
+        const { data: produtos, error: produtosError } = await supabase
+            .from('produtos')
+            .select('*')
+            .order('id', { ascending: true });
+        if (produtosError) throw produtosError;
+
+        // Passo 3: Junta as informações no código
+        const produtosComCategoria = produtos.map(produto => ({
+            ...produto, // Copia todas as informações do produto
+            categoria_nome: mapaCategorias.get(produto.categoria_id) || 'Sem Categoria' // Adiciona o nome da categoria
+        }));
+
+        res.status(200).json(produtosComCategoria);
     } catch (error) {
         console.error('Erro ao buscar produtos:', error.message);
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
+
 
 app.post('/api/produtos', async (req, res) => {
     try {
@@ -71,27 +88,22 @@ app.post('/api/produtos', async (req, res) => {
             return res.status(400).json({ error: 'Nome, preço e categoria são obrigatórios.' });
         }
 
-        // Insere o produto
         const { data: produtoData, error: produtoError } = await supabase
-            .from('Produtos')
-            .insert([{
-                nome, descricao, preco_base, categoria_id, subcategoria, preco_pao_especial, preco_pao_baby,
-                imagem_url: imagem_url || 'placeholder.jpg'
-            }])
+            .from('produtos')
+            .insert([{ nome, descricao, preco_base, categoria_id, subcategoria, preco_pao_especial, preco_pao_baby, imagem_url: imagem_url || 'placeholder.jpg' }])
             .select()
-            .single(); // .single() para pegar o objeto inserido
+            .single();
 
         if (produtoError) throw produtoError;
         const produtoId = produtoData.id;
 
-        // Insere a receita, se houver
         if (receita && receita.length > 0) {
             const receitaParaInserir = receita.map(item => ({
                 produto_id: produtoId,
                 ingrediente_id: item.ingrediente_id,
                 quantidade_usada: item.quantidade_usada
             }));
-            const { error: receitaError } = await supabase.from('Receitas').insert(receitaParaInserir);
+            const { error: receitaError } = await supabase.from('receitas').insert(receitaParaInserir);
             if (receitaError) throw receitaError;
         }
 
@@ -107,31 +119,24 @@ app.put('/api/produtos/:id', async (req, res) => {
         const { id } = req.params;
         const { nome, descricao, preco_base, categoria_id, subcategoria, preco_pao_especial, preco_pao_baby, imagem_url, receita } = req.body;
 
-        // Atualiza o produto
         const { error: produtoError } = await supabase
-            .from('Produtos')
-            .update({
-                nome, descricao, preco_base, categoria_id, subcategoria, preco_pao_especial, preco_pao_baby,
-                imagem_url: imagem_url || 'placeholder.jpg'
-            })
+            .from('produtos')
+            .update({ nome, descricao, preco_base, categoria_id, subcategoria, preco_pao_especial, preco_pao_baby, imagem_url: imagem_url || 'placeholder.jpg' })
             .eq('id', id);
         if (produtoError) throw produtoError;
 
-        // Deleta a receita antiga
-        const { error: deleteError } = await supabase.from('Receitas').delete().eq('produto_id', id);
+        const { error: deleteError } = await supabase.from('receitas').delete().eq('produto_id', id);
         if (deleteError) throw deleteError;
 
-        // Insere a nova receita
         if (receita && receita.length > 0) {
             const receitaParaInserir = receita.map(item => ({
                 produto_id: id,
                 ingrediente_id: item.ingrediente_id,
                 quantidade_usada: item.quantidade_usada
             }));
-            const { error: receitaError } = await supabase.from('Receitas').insert(receitaParaInserir);
+            const { error: receitaError } = await supabase.from('receitas').insert(receitaParaInserir);
             if (receitaError) throw receitaError;
         }
-
         res.status(200).json({ message: 'Produto atualizado com sucesso!' });
     } catch (error) {
         console.error("Erro ao atualizar produto:", error.message);
@@ -142,10 +147,7 @@ app.put('/api/produtos/:id', async (req, res) => {
 app.delete('/api/produtos/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        // O Supabase está configurado com 'ON DELETE CASCADE', então apagar o produto deve apagar a receita.
-        // Se não estiver, descomente a linha abaixo.
-        // await supabase.from('Receitas').delete().eq('produto_id', id);
-        const { error } = await supabase.from('Produtos').delete().eq('id', id);
+        const { error } = await supabase.from('produtos').delete().eq('id', id);
         if (error) throw error;
         res.status(200).json({ message: 'Produto apagado com sucesso!' });
     } catch (error) {
@@ -159,8 +161,8 @@ app.get('/api/produtos/:id/receita', async (req, res) => {
     try {
         const { id } = req.params;
         const { data, error } = await supabase
-            .from('Receitas')
-            .select('*, ingrediente_nome:Ingredientes(nome, unidade)')
+            .from('receitas')
+            .select('*, ingrediente_nome:ingredientes(nome, unidade)')
             .eq('produto_id', id);
         if (error) throw error;
         res.status(200).json(data);
@@ -182,7 +184,7 @@ app.get('/api/categorias', async (req, res) => {
     }
 });
 
-app.post('/api/', async (req, res) => {
+app.post('/api/categorias', async (req, res) => {
     try {
         const { nome, ordem } = req.body;
         const { data, error } = await supabase.from('categorias').insert([{ nome, ordem }]).select().single();
@@ -194,36 +196,31 @@ app.post('/api/', async (req, res) => {
     }
 });
 
+
 // --- ROTAS DE PEDIDOS ---
-// ATENÇÃO: A lógica de transação foi simplificada. Para robustez máxima,
-// o ideal seria criar uma "Stored Procedure" no Supabase e chamá-la via rpc().
 app.post('/api/pedidos', async (req, res) => {
     const { cliente_nome, cliente_telefone, cliente_endereco, tipo_entrega, valor_total, itens, saches_alho, molhos } = req.body;
 
     try {
-        // Lógica de dedução de estoque (simplificada, sem transação real)
         for (const item of itens) {
-            // Encontrar o produto para pegar a receita
             const { data: produtoInfo, error: produtoError } = await supabase
-                .from('Produtos')
-                .select('id, categorias(nome)')
+                .from('produtos')
+                .select('id, categoria:categorias(nome)')
                 .eq('nome', item.name)
                 .single();
 
-            if (produtoError || !produtoInfo) continue; // Pula se não achar o produto
-            if (produtoInfo.categorias.nome === 'Bebidas') continue; // Pula bebidas
+            if (produtoError || !produtoInfo) continue;
+            if (produtoInfo.categoria.nome === 'Bebidas') continue;
 
             const { data: receita, error: receitaError } = await supabase
-                .from('Receitas')
+                .from('receitas')
                 .select('*')
                 .eq('produto_id', produtoInfo.id);
 
             if (receitaError || receita.length === 0) continue;
 
-            // Deduz cada ingrediente da receita do estoque
             for (const ingredienteDaReceita of receita) {
                 const quantidadeADeduzir = ingredienteDaReceita.quantidade_usada * item.quantity;
-                // Usamos rpc para fazer a dedução de forma atômica no banco
                 const { error: estoqueError } = await supabase.rpc('deduzir_estoque', {
                     ingrediente_id_param: ingredienteDaReceita.ingrediente_id,
                     quantidade_param: quantidadeADeduzir
@@ -232,9 +229,8 @@ app.post('/api/pedidos', async (req, res) => {
             }
         }
 
-        // Insere o pedido principal
         const { data: pedidoData, error: pedidoError } = await supabase
-            .from('Pedidos')
+            .from('pedidos')
             .insert([{ cliente_nome, cliente_telefone, cliente_endereco, tipo_entrega, valor_total, saches_alho, molhos }])
             .select()
             .single();
@@ -242,7 +238,6 @@ app.post('/api/pedidos', async (req, res) => {
         if (pedidoError) throw pedidoError;
         const novoPedidoId = pedidoData.id;
 
-        // Insere os itens do pedido
         const itensParaInserir = itens.map(item => ({
             pedido_id: novoPedidoId,
             produto_nome: item.name,
@@ -251,7 +246,7 @@ app.post('/api/pedidos', async (req, res) => {
             observacoes: item.notes,
             adicionais: item.extras ? item.extras.join(', ') : null
         }));
-        const { error: itensError } = await supabase.from('Itens_do_Pedido').insert(itensParaInserir);
+        const { error: itensError } = await supabase.from('itens_do_pedido').insert(itensParaInserir);
         if (itensError) throw itensError;
 
         res.status(201).json({ message: 'Pedido criado com sucesso!', pedidoId: novoPedidoId });
@@ -265,8 +260,8 @@ app.post('/api/pedidos', async (req, res) => {
 app.get('/api/pedidos', async (req, res) => {
     try {
         const { data, error } = await supabase
-            .from('Pedidos')
-            .select('*, Itens_do_Pedido(*)') // Pega o pedido e todos os seus itens relacionados
+            .from('pedidos')
+            .select('*, itens_do_pedido(*)')
             .order('data_hora', { ascending: false });
 
         if (error) throw error;
@@ -281,7 +276,7 @@ app.put('/api/pedidos/:id/status', async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        const { error } = await supabase.from('Pedidos').update({ status }).eq('id', id);
+        const { error } = await supabase.from('pedidos').update({ status }).eq('id', id);
         if (error) throw error;
         res.status(200).json({ message: 'Status do pedido atualizado com sucesso!' });
     } catch (error) {
@@ -294,7 +289,7 @@ app.put('/api/pedidos/:id/status', async (req, res) => {
 // --- ROTAS DE ESTOQUE (INGREDIENTES) ---
 app.get('/api/ingredientes', async (req, res) => {
     try {
-        const { data, error } = await supabase.from('Ingredientes').select('*').order('nome');
+        const { data, error } = await supabase.from('ingredientes').select('*').order('nome');
         if (error) throw error;
         res.status(200).json(data);
     } catch (error) {
@@ -307,7 +302,7 @@ app.put('/api/ingredientes/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { quantidade_estoque } = req.body;
-        const { error } = await supabase.from('Ingredientes').update({ quantidade_estoque }).eq('id', id);
+        const { error } = await supabase.from('ingredientes').update({ quantidade_estoque }).eq('id', id);
         if (error) throw error;
         res.status(200).json({ message: 'Estoque atualizado com sucesso!' });
     } catch (error) {
@@ -319,7 +314,7 @@ app.put('/api/ingredientes/:id', async (req, res) => {
 app.post('/api/ingredientes', async (req, res) => {
     try {
         const { nome, quantidade_estoque, unidade } = req.body;
-        const { data, error } = await supabase.from('Ingredientes').insert([{ nome, quantidade_estoque, unidade }]).select().single();
+        const { data, error } = await supabase.from('ingredientes').insert([{ nome, quantidade_estoque, unidade }]).select().single();
         if (error) throw error;
         res.status(201).json({ message: 'Ingrediente adicionado com sucesso!', id: data.id });
     } catch (error) {
@@ -331,7 +326,7 @@ app.post('/api/ingredientes', async (req, res) => {
 app.delete('/api/ingredientes/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { error } = await supabase.from('Ingredientes').delete().eq('id', id);
+        const { error } = await supabase.from('ingredientes').delete().eq('id', id);
         if (error) throw error;
         res.status(200).json({ message: 'Ingrediente apagado com sucesso!' });
     } catch (error) {
