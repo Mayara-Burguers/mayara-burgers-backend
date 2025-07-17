@@ -1,13 +1,15 @@
 /*
 ============================================================
 | JAVASCRIPT COMPLETO E CORRIGIDO - MAYARA BURGUER'S       |
-| CORREÇÃO: Lógica de renderização do menu e eventos      |
-| restaurados para garantir a exibição dos produtos.       |
+| CORREÇÃO: URL do backend atualizada para produção.       |
 ============================================================
 */
 document.addEventListener("DOMContentLoaded", async () => {
 
     // 1. ELEMENTOS E DADOS GLOBAIS
+    // IMPORTANTE: Cole a URL do seu backend do Render aqui!
+    const BASE_URL = 'https://mayara-burgers-backend.onrender.com'; // <--- TROQUE PELA SUA URL
+
     const menuContainer = document.getElementById('menu-container');
     const navContainer = document.getElementById('nav-categorias');
     const modalGenericoEl = document.getElementById('modalGenerico');
@@ -63,13 +65,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 3. CARREGAMENTO DO MENU
     async function carregarMenu() {
         try {
-            const response = await fetch('http://localhost:3001/api/produtos');
-            if (!response.ok) throw new Error('Erro de rede');
+            const response = await fetch(`${BASE_URL}/api/produtos`);
+            if (!response.ok) throw new Error(`Erro de rede: ${response.statusText}`);
             todosOsProdutos = await response.json();
-            renderizarMenu(); // <-- Esta chamada estava faltando
+            renderizarMenu();
         } catch (error) {
             console.error("Erro ao carregar o menu:", error);
-            menuContainer.innerHTML = "<p class='text-center text-danger'>FALHA NA CONEXÃO. Verifique se o servidor backend está rodando.</p>";
+            menuContainer.innerHTML = `<p class='text-center text-danger'>FALHA AO CARREGAR O CARDÁPIO. Verifique a conexão e a URL do servidor. Detalhes: ${error.message}</p>`;
         }
     }
     
@@ -389,7 +391,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             };
             
             try {
-                const response = await fetch('http://localhost:3001/api/pedidos', {
+                const response = await fetch(`${BASE_URL}/api/pedidos`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(pedidoParaEnviar)
