@@ -27,14 +27,11 @@
         h3.category-title { font-size: 1.5rem; font-weight: 700; color: var(--roxo-destaque); margin-top: 2rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--roxo-destaque); }
         .date-group { margin-bottom: 2rem; }
         .date-header { font-size: 1.5rem; font-weight: 700; color: var(--roxo-destaque); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--roxo-destaque); }
-        .order-card { background-color: var(--branco-puro); border: 1px solid var(--cinza-borda); border-left: 5px solid #636e72; border-radius: var(--raio-borda); box-shadow: var(--sombra-padrao); margin-bottom: 1.5rem; padding: 1.5rem; }
+        .order-card { background-color: var(--branco-puro); border: 1px solid var(--cinza-borda); border-left: 5px solid #636e72; border-radius: var(--raio-borda); box-shadow: var(--sombra-padrao); margin-bottom: 1.5rem; }
         .order-card.status-recebido { border-left-color: var(--azul-acao); }
         .order-card.status-em-preparo { border-left-color: var(--amarelo-acao); }
         .order-card.status-finalizado, .order-card.status-pronto-para-retirada, .order-card.status-saiu-para-entrega { border-left-color: var(--verde-acao); }
         .order-card.status-cancelado { border-left-color: var(--vermelho-acao); opacity: 0.7; }
-        .order-header { display:flex; justify-content:space-between; margin-bottom:1rem; font-weight: 700; }
-        .details-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
-        .order-actions { border-top: 1px solid var(--cinza-borda); margin-top: 1rem; padding-top: 1rem; display: flex; align-items: center; gap: 1rem;}
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
         .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 700px; border-radius: var(--raio-borda); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--cinza-borda); padding-bottom: 1rem; margin-bottom: 1rem; }
@@ -132,133 +129,96 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
-            // Define a URL base da sua API online. Todas as chamadas usarão esta variável.
-            const API_BASE_URL = 'https://mayara-backend-servidor.onrender.com';
-
             const mainAdmin = document.getElementById("main-admin");
             const modalProduto = document.getElementById('modal-produto');
             const formProduto = document.getElementById('form-produto');
-            
             let categoriasData = [];
             let produtosData = [];
             let ingredientesData = [];
             let receitaAtual = [];
 
+            const BASE_URL = 'http://localhost:3001/api'; // Mude aqui quando for para produção
+
+            // FUNÇÕES DE FETCH
+            async function fetchData(endpoint) {
+                try {
+                    const response = await fetch(`${BASE_URL}${endpoint}`);
+                    if (!response.ok) throw new Error(`Erro na rede ao buscar ${endpoint}`);
+                    return await response.json();
+                } catch (error) {
+                    console.error(`Erro em fetchData(${endpoint}):`, error);
+                    return [];
+                }
+            }
+
             // FUNÇÕES DE RENDERIZAÇÃO
             async function renderizarPedidos() {
                 const container = document.getElementById("historico-container");
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/pedidos`);
-                    if (!response.ok) {
-                        throw new Error(`Falha ao buscar pedidos: ${response.statusText}`);
-                    }
-                    const pedidos = await response.json();
-                    
-                    container.innerHTML = "";
-                    if (pedidos.length === 0) {
-                        container.innerHTML = '<div class="card-admin"><p>Nenhum pedido no histórico.</p></div>';
-                        return;
-                    }
-
-                    const pedidosAgrupados = pedidos.reduce((acc, pedido) => {
-                        const data = new Date(pedido.data_hora).toLocaleDateString('pt-BR', {timeZone: 'America/Sao_Paulo'});
-                        (acc[data] = acc[data] || []).push(pedido);
-                        return acc;
-                    }, {});
-
-                    for(const dataString in pedidosAgrupados) {
-                        const dateGroupDiv = document.createElement('div');
-                        dateGroupDiv.className = 'date-group';
-                        dateGroupDiv.innerHTML = `<h3 class="date-header">${dataString}</h3>`;
-                        
-                        pedidosAgrupados[dataString].forEach(pedido => {
-                            let itensHtml = 'Nenhum item encontrado.';
-                            // CORREÇÃO 1: Verifica se "itens_do_pedido" existe e não está vazio
-                            if (pedido.itens_do_pedido && pedido.itens_do_pedido.length > 0) {
-                                itensHtml = ''; // Limpa a mensagem padrão
-                                // CORREÇÃO 2: Itera sobre "itens_do_pedido"
-                                pedido.itens_do_pedido.forEach(item => {
-                                    itensHtml += `<div class="item-detail" style="border-bottom: 1px dashed #ccc; margin-bottom: 5px; padding-bottom: 5px;"><p><strong>${item.quantidade}x ${item.produto_nome}</strong></p><small>${item.adicionais ? `Adcs: ${item.adicionais}<br>`: ''}${item.observacoes ? `Obs: ${item.observacoes}`: ''}</small></div>`;
-                                });
-                            }
-
-                            const statusOptions = ['Recebido', 'Em Preparo', 'Pronto para Retirada', 'Saiu para Entrega', 'Finalizado', 'Cancelado'].map(s => `<option value="${s}" ${pedido.status === s ? 'selected' : ''}>${s}</option>`).join('');
-                            const statusSlug = pedido.status ? pedido.status.toLowerCase().replace(/\s+/g, '-') : 'desconhecido';
-                            
-                            const card = document.createElement("div");
-                            card.className = `order-card status-${statusSlug}`;
-                            card.innerHTML = `
-                                <div class="order-header">
-                                    <span class="order-number">Pedido #${pedido.id}</span>
-                                    <span class="order-time">${new Date(pedido.data_hora).toLocaleTimeString('pt-BR')}</span>
-                                </div>
-                                <div class="details-grid">
-                                    <div>
-                                        <h3>Cliente</h3>
-                                        <p><strong>Nome:</strong> ${pedido.cliente_nome}</p>
-                                        <p><strong>Telefone:</strong> ${pedido.cliente_telefone || 'Não informado'}</p>
-                                        <p><strong>Entrega:</strong> ${pedido.tipo_entrega === 'retirada' ? 'Retirada no Balcão' : pedido.cliente_endereco}</p>
-                                    </div>
-                                    <div class="order-items">
-                                        <h3>Itens</h3>
-                                        ${itensHtml}
-                                    </div>
-                                </div>
-                                <div class="order-actions">
-                                    <label for="status-${pedido.id}" style="font-weight: 500;">Status:</label>
-                                    <select id="status-${pedido.id}" style="flex:1; padding: 8px;">${statusOptions}</select>
-                                    <button class="btn-action update-status-btn edit-btn" data-id="${pedido.id}">Atualizar</button>
-                                </div>
-                            `;
-                            dateGroupDiv.appendChild(card);
+                container.innerHTML = "<p>Carregando pedidos...</p>";
+                const pedidos = await fetchData('/pedidos');
+                container.innerHTML = "";
+                if (pedidos.length === 0) {
+                    container.innerHTML = '<div class="card-admin"><p>Nenhum pedido no histórico.</p></div>';
+                    return;
+                }
+                const pedidosAgrupados = pedidos.reduce((acc, pedido) => {
+                    const data = new Date(pedido.data_hora).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                    (acc[data] = acc[data] || []).push(pedido);
+                    return acc;
+                }, {});
+                for (const dataString in pedidosAgrupados) {
+                    const dateGroupDiv = document.createElement('div');
+                    dateGroupDiv.className = 'date-group';
+                    dateGroupDiv.innerHTML = `<h3 class="date-header">${dataString}</h3>`;
+                    pedidosAgrupados[dataString].forEach(pedido => {
+                        let itensHtml = '';
+                        pedido.itens.forEach(item => {
+                            itensHtml += `<div class="item-detail"><p><strong>${item.quantidade}x ${item.produto_nome}</strong></p><small>${item.adicionais ? `Adcs: ${item.adicionais}<br>` : ''}${item.observacoes ? `Obs: ${item.observacoes}` : ''}</small></div>`;
                         });
-                        // CORREÇÃO 3: Usa a variável 'container' em vez de 'historicoContainer'
-                        container.appendChild(dateGroupDiv);
-                    }
-                } catch (error) { 
-                    console.error('Erro ao renderizar pedidos:', error);
-                    container.innerHTML = `<div class="card-admin"><p style="color: red;">Ocorreu um erro ao carregar o histórico de pedidos.</p></div>`;
+                        const statusOptions = ['Recebido', 'Em Preparo', 'Pronto para Retirada', 'Saiu para Entrega', 'Finalizado', 'Cancelado'].map(s => `<option value="${s}" ${pedido.status === s ? 'selected' : ''}>${s}</option>`).join('');
+                        const statusSlug = pedido.status.toLowerCase().replace(/\s+/g, '-');
+                        const card = document.createElement("div");
+                        card.className = `order-card status-${statusSlug}`;
+                        card.innerHTML = `<div class="order-header"><span class="order-number">Pedido #${pedido.id}</span><span class="order-time">${new Date(pedido.data_hora).toLocaleTimeString('pt-BR')}</span></div><div class="order-body"><div class="details-grid"><div style="padding-right:1rem;"><h3>Cliente</h3><p><strong>Nome:</strong> ${pedido.cliente_nome}</p><p><strong>Telefone:</strong> ${pedido.cliente_telefone || 'Não informado'}</p><p><strong>Entrega:</strong> ${pedido.tipo_entrega === 'retirada' ? 'Retirada no Balcão' : pedido.cliente_endereco}</p></div><div class="order-items"><h3>Itens</h3>${itensHtml}</div></div><div class="order-actions" style="border-top: 1px solid var(--cinza-borda); margin-top: 1rem; padding-top: 1rem; display: flex; align-items: center; gap: 1rem;"><label for="status-${pedido.id}" style="font-weight: 500;">Status:</label><select id="status-${pedido.id}" class="form-control" style="flex:1; padding: 8px;">${statusOptions}</select><button class="btn-action update-status-btn" data-id="${pedido.id}">Atualizar</button></div></div>`;
+                        dateGroupDiv.appendChild(card);
+                    });
+                    container.appendChild(dateGroupDiv);
                 }
             }
 
             async function renderizarEstoque() {
                 const container = document.getElementById("estoque-container");
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/ingredientes`);
-                    ingredientesData = await response.json();
-                    container.innerHTML = "";
-                    ingredientesData.forEach(ing => {
-                        const row = document.createElement("tr");
-                        row.innerHTML = `<td>${ing.nome}</td><td>${ing.quantidade_estoque}</td><td>${ing.unidade}</td><td><input type="number" step="0.01" class="stock-input" id="stock-input-${ing.id}"></td><td><button class="btn-action update-stock-btn edit-btn" data-id="${ing.id}">Atualizar</button><button class="btn-action delete-btn" data-id="${ing.id}">Apagar</button></td>`;
-                        container.appendChild(row);
-                    });
-                } catch (error) { console.error('Erro ao buscar estoque:', error); }
+                container.innerHTML = "<tr><td colspan='5'>Carregando estoque...</td></tr>";
+                ingredientesData = await fetchData('/ingredientes');
+                container.innerHTML = "";
+                ingredientesData.forEach(ing => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `<td>${ing.nome}</td><td>${ing.quantidade_estoque}</td><td>${ing.unidade}</td><td><input type="number" step="0.01" class="stock-input" id="stock-input-${ing.id}"></td><td><button class="btn-action update-stock-btn" data-id="${ing.id}">Atualizar</button><button class="btn-action delete-btn" data-id="${ing.id}">Apagar</button></td>`;
+                    container.appendChild(row);
+                });
             }
 
             async function renderizarProdutos() {
                 const container = document.getElementById("produtos-list-container");
-                try {
-                    const resProdutos = await fetch(`${API_BASE_URL}/api/produtos`);
-                    produtosData = await resProdutos.json();
-                    if (categoriasData.length === 0) {
-                        const resCategorias = await fetch(`${API_BASE_URL}/api/categorias`);
-                        categoriasData = await resCategorias.json();
-                    }
-                    const produtosAgrupados = produtosData.reduce((acc, produto) => {
-                        const catNome = produto.categoria_nome || 'Outros';
-                        (acc[catNome] = acc[catNome] || []).push(produto);
-                        return acc;
-                    }, {});
-                    container.innerHTML = '';
-                    for (const nomeCategoria in produtosAgrupados) {
-                        let tableHtml = `<h3 class="category-title">${nomeCategoria}</h3><div class="table-container"><table><thead><tr><th>Nome</th><th>Preço Base</th><th>Ações</th></tr></thead><tbody>`;
-                        produtosAgrupados[nomeCategoria].forEach(p => {
-                            tableHtml += `<tr><td>${p.nome}</td><td>${p.preco_base.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</td><td><button class="btn-action edit-btn" data-id="${p.id}">Editar</button><button class="btn-action delete-btn" data-id="${p.id}">Apagar</button></td></tr>`;
-                        });
-                        tableHtml += `</tbody></table></div>`;
-                        container.innerHTML += tableHtml;
-                    }
-                } catch(error) { console.error("Erro ao renderizar produtos:", error); }
+                container.innerHTML = "<p>Carregando produtos...</p>";
+                produtosData = await fetchData('/produtos');
+                if (categoriasData.length === 0) {
+                    categoriasData = await fetchData('/categorias');
+                }
+                const produtosAgrupados = produtosData.reduce((acc, produto) => {
+                    const catNome = produto.categoria_nome || 'Outros';
+                    (acc[catNome] = acc[catNome] || []).push(produto);
+                    return acc;
+                }, {});
+                container.innerHTML = '';
+                for (const nomeCategoria in produtosAgrupados) {
+                    let tableHtml = `<h3 class="category-title">${nomeCategoria}</h3><div class="table-container"><table><thead><tr><th>Nome</th><th>Preço Base</th><th>Ações</th></tr></thead><tbody>`;
+                    produtosAgrupados[nomeCategoria].forEach(p => {
+                        tableHtml += `<tr><td>${p.nome}</td><td>${parseFloat(p.preco_base).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</td><td><button class="btn-action edit-btn" data-id="${p.id}">Editar</button><button class="btn-action delete-btn" data-id="${p.id}">Apagar</button></td></tr>`;
+                    });
+                    tableHtml += `</tbody></table></div>`;
+                    container.innerHTML += tableHtml;
+                }
             }
 
             // LÓGICA DO MODAL DE PRODUTOS
@@ -278,10 +238,7 @@
                     document.getElementById('produto-imagem').value = produto.imagem_url || '';
                     document.getElementById('produto-preco-especial').value = produto.preco_pao_especial || '';
                     document.getElementById('produto-preco-baby').value = produto.preco_pao_baby || '';
-                    try {
-                        const res = await fetch(`${API_BASE_URL}/api/produtos/${produto.id}/receita`);
-                        receitaAtual = await res.json();
-                    } catch (error) { console.error("Erro ao buscar receita:", error); }
+                    receitaAtual = await fetchData(`/produtos/${produto.id}/receita`);
                 } else {
                     document.getElementById('modal-produto-titulo').textContent = 'Adicionar Novo Produto';
                     document.getElementById('produto-id').value = '';
@@ -292,21 +249,21 @@
             
             async function popularSelectIngredientes() {
                 const select = document.getElementById('receita-ingrediente');
-                try {
-                    select.innerHTML = ingredientesData.map(i => `<option value="${i.id}" data-unidade="${i.unidade}">${i.nome}</option>`).join('');
-                } catch(error) { console.error("Erro ao popular ingredientes:", error); }
+                select.innerHTML = ingredientesData.map(i => `<option value="${i.id}" data-unidade="${i.unidade}">${i.nome}</option>`).join('');
             }
             
             function renderizarListaReceita() {
                 const container = document.getElementById('receita-list');
                 container.innerHTML = '';
                 receitaAtual.forEach((item, index) => {
-                     const nomeIngrediente = ingredientesData.find(i => i.id === item.ingrediente_id)?.nome || 'Ingrediente';
-                    container.innerHTML += `<div class="receita-item" data-index="${index}"><span>${nomeIngrediente} - ${item.quantidade_usada}</span><button type="button" class="btn-action delete-btn">&times;</button></div>`;
+                    const ingrediente = ingredientesData.find(i => i.id === item.ingrediente_id);
+                    const nome = ingrediente ? ingrediente.nome : 'Ingrediente não encontrado';
+                    const unidade = ingrediente ? ingrediente.unidade : '';
+                    container.innerHTML += `<div class="receita-item" data-index="${index}"><span>${nome} - ${item.quantidade_usada} ${unidade}</span><button type="button" class="btn-action delete-btn">&times;</button></div>`;
                 });
             }
 
-            // EVENTOS DE AÇÃO
+            // DELEGAÇÃO DE EVENTOS
             mainAdmin.addEventListener('click', async (e) => {
                 const target = e.target;
                 if (target.matches('.admin-nav-item')) {
@@ -314,52 +271,54 @@
                     target.classList.add('active');
                     document.getElementById(`tab-${target.dataset.tab}`).classList.add('active');
                 }
-                else if(target.id === 'btn-add-produto') {
-                    abrirModalProduto();
-                }
-                else if (target.matches('.update-stock-btn')) {
-                    const id = target.dataset.id;
+                else if(target.id === 'btn-add-produto') abrirModalProduto();
+                else if(target.closest('.update-stock-btn')) {
+                    const id = target.closest('.update-stock-btn').dataset.id;
                     const input = document.getElementById(`stock-input-${id}`);
-                    if (input.value === '') return;
-                    await fetch(`${API_BASE_URL}/api/ingredientes/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantidade_estoque: input.value }) });
-                    renderizarEstoque();
-                }
-                else if (target.matches('.delete-btn') && target.closest('#estoque-table')) {
-                    const id = target.dataset.id;
-                    if (confirm('Tem certeza?')) {
-                        await fetch(`${API_BASE_URL}/api/ingredientes/${id}`, { method: 'DELETE' });
+                    if (input.value !== '') {
+                        await fetch(`${BASE_URL}/ingredientes/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantidade_estoque: input.value }) });
                         renderizarEstoque();
                     }
                 }
-                else if (target.matches('.edit-btn') && target.closest('#produtos-list-container')) {
+                else if(target.closest('.delete-btn') && target.closest('#estoque-table')) {
+                    const id = target.closest('.delete-btn').dataset.id;
+                    if (confirm('Tem certeza?')) {
+                        await fetch(`${BASE_URL}/ingredientes/${id}`, { method: 'DELETE' });
+                        renderizarEstoque();
+                    }
+                }
+                else if(target.matches('.edit-btn') && target.closest('#produtos-list-container')) {
                     const id = target.dataset.id;
                     const produto = produtosData.find(p => p.id == id);
                     if(produto) abrirModalProduto(produto);
                 }
-                else if (target.matches('.delete-btn') && target.closest('#produtos-list-container')) {
+                else if(target.matches('.delete-btn') && target.closest('#produtos-list-container')) {
                     const id = target.dataset.id;
                     if (confirm('Tem certeza?')) {
-                        await fetch(`${API_BASE_URL}/api/produtos/${id}`, { method: 'DELETE' });
+                        await fetch(`${BASE_URL}/produtos/${id}`, { method: 'DELETE' });
                         renderizarProdutos();
                     }
                 }
                 else if (target.matches('.update-status-btn')) {
                     const id = target.dataset.id;
                     const status = document.getElementById(`status-${id}`).value;
-                    await fetch(`${API_BASE_URL}/api/pedidos/${id}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+                    await fetch(`${BASE_URL}/pedidos/${id}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
                     renderizarPedidos();
                 }
             });
 
+            // EVENTOS DE FORMULÁRIOS E MODAL
             document.querySelector('#modal-produto .close-btn').onclick = () => modalProduto.style.display = 'none';
-            
             document.getElementById('btn-add-receita').addEventListener('click', () => {
                 const select = document.getElementById('receita-ingrediente');
-                if(!select.value) return alert('Nenhum ingrediente selecionado.');
                 const ingrediente_id = parseInt(select.value);
+                if(!ingrediente_id) return alert('Nenhum ingrediente selecionado.');
+                const selectedOption = select.options[select.selectedIndex];
+                const ingrediente_nome = selectedOption.text.split('(')[0].trim();
+                const unidade = selectedOption.dataset.unidade;
                 const quantidade_usada = parseFloat(document.getElementById('receita-qtd').value);
-                if (!ingrediente_id || !quantidade_usada) return;
-                receitaAtual.push({ ingrediente_id, quantidade_usada });
+                if (!quantidade_usada) return;
+                receitaAtual.push({ ingrediente_id, ingrediente_nome, quantidade_usada, unidade });
                 renderizarListaReceita();
                 document.getElementById('receita-qtd').value = '';
             });
@@ -375,7 +334,7 @@
             document.getElementById('form-add-ingrediente').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const data = { nome: document.getElementById('nome-ingrediente').value, quantidade_estoque: document.getElementById('qtd-ingrediente').value, unidade: document.getElementById('unidade-ingrediente').value };
-                await fetch(`${API_BASE_URL}/api/ingredientes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                await fetch(`${BASE_URL}/ingredientes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
                 e.target.reset();
                 renderizarEstoque();
             });
@@ -383,11 +342,9 @@
             document.getElementById('form-add-categoria').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const data = { nome: document.getElementById('nome-categoria').value, ordem: document.getElementById('ordem-categoria').value };
-                await fetch(`${API_BASE_URL}/api/categorias`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-                alert('Categoria adicionada!');
+                await fetch(`${BASE_URL}/categorias`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
                 e.target.reset();
-                const res = await fetch(`${API_BASE_URL}/api/categorias`);
-                categoriasData = await res.json();
+                categoriasData = await fetchData('/categorias');
             });
 
             formProduto.addEventListener('submit', async (e) => {
@@ -405,15 +362,10 @@
                     receita: receitaAtual.map(({ingrediente_id, quantidade_usada}) => ({ingrediente_id, quantidade_usada}))
                 };
                 const method = id ? 'PUT' : 'POST';
-                const url = id ? `${API_BASE_URL}/api/produtos/${id}` : `${API_BASE_URL}/api/produtos`;
-                const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-                if (response.ok) {
-                    alert('Produto salvo com sucesso!');
-                    modalProduto.style.display = 'none';
-                    renderizarProdutos();
-                } else {
-                    alert('Falha ao salvar produto.');
-                }
+                const url = id ? `${BASE_URL}/produtos/${id}` : `${BASE_URL}/produtos`;
+                await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                modalProduto.style.display = 'none';
+                renderizarProdutos();
             });
             
             // CARREGAMENTO INICIAL
