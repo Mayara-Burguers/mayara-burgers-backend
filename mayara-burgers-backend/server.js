@@ -205,7 +205,20 @@ app.post('/api/pedidos', async (req, res) => {
                         
                         if (ingredienteResult.rows.length > 0) {
                             const ingredienteId = ingredienteResult.rows[0].id;
-                            const quantidadeAdicionalADeduzir = 1 * quantity;
+                            let quantidadeAdicionalADeduzir = quantity; // Padrão é 1 unidade para cada adicional
+                            
+                            // Lógica para definir a quantidade a deduzir com base na unidade
+                            const unidade = ingredienteResult.rows[0].unidade;
+                            if (unidade === 'g') {
+                                // Definimos uma quantidade padrão em gramas para porções de adicionais
+                                // Ex: Uma porção de bacon é 30g, uma de queijo é 20g
+                                switch(name) {
+                                    case 'Bacon Fatiado': quantidadeAdicionalADeduzir = 30 * quantity; break;
+                                    case 'Queijo Mussarela': quantidadeAdicionalADeduzir = 20 * quantity; break;
+                                    // Adicione outros casos aqui
+                                    default: quantidadeAdicionalADeduzir = 20 * quantity; // Um padrão para outros
+                                }
+                            }
                             
                             const sqlUpdateAdicional = `UPDATE Ingredientes SET quantidade_estoque = quantidade_estoque - $1 WHERE id = $2 AND quantidade_estoque >= $3`;
                             const updateAdicionalResult = await client.query(sqlUpdateAdicional, [quantidadeAdicionalADeduzir, ingredienteId, quantidadeAdicionalADeduzir]);
