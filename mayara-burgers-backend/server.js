@@ -1,9 +1,8 @@
 /*
 ============================================================
-| SERVER.JS COMPLETO E CORRIGIDO                           |
-| FOCO DA CORREÇÃO:                                        |
-| - Dedução automática de estoque agora inclui os          |
-|   ingredientes adicionais escolhidos pelo cliente.       |
+| SERVER.JS COMPLETO E FINAL - MAYARA BURGUER'S            |
+| VERSÃO: DATABASE-DRIVEN (PostgreSQL)                     |
+| CORREÇÃO: Dedução de estoque de ADICIONAIS implementada. |
 ============================================================
 */
 require('dotenv').config();
@@ -184,31 +183,38 @@ app.post('/api/pedidos', async (req, res) => {
             if (produtoInfoResult.rows[0].categoria_nome !== 'Bebidas') {
                 const produtoId = produtoInfoResult.rows[0].id;
                 const receitaResult = await client.query('SELECT ingrediente_id, quantidade_usada FROM Receitas WHERE produto_id = $1', [produtoId]);
+                const receita = receitaResult.rows;
                 
-                // Deduz ingredientes da receita base
-                for (const ingredienteDaReceita of receitaResult.rows) {
+                if (receita.length === 0 && (!item.extras || item.extras.length === 0)) {
+                    console.warn(`Aviso: Produto "${item.name}" não possui receita nem adicionais. Nenhuma dedução de estoque será feita para este item.`);
+                }
+                
+                for (const ingredienteDaReceita of receita) {
                     const quantidadeADeduzir = ingredienteDaReceita.quantidade_usada * item.quantity;
                     const sqlUpdateEstoque = `UPDATE Ingredientes SET quantidade_estoque = quantidade_estoque - $1 WHERE id = $2 AND quantidade_estoque >= $3`;
                     const updateResult = await client.query(sqlUpdateEstoque, [quantidadeADeduzir, ingredienteDaReceita.ingrediente_id, quantidadeADeduzir]);
                     if (updateResult.rowCount === 0) {
-                        const ingInfo = await client.query('SELECT nome FROM Ingredientes WHERE id = $1', [ingredienteDaReceita.ingrediente_id]);
-                        throw new Error(`Estoque insuficiente para: ${ingInfo.rows[0].nome}`);
+                        const ingredienteInfoResult = await client.query('SELECT nome FROM Ingredientes WHERE id = $1', [ingredienteDaReceita.ingrediente_id]);
+                        throw new Error(`Estoque insuficiente para: ${ingredienteInfoResult.rows[0].nome}`);
                     }
                 }
 
-                // --- INÍCIO DA LÓGICA CORRIGIDA PARA ADICIONAIS ---
                 if (item.extras && item.extras.length > 0) {
                     for (const extra of item.extras) {
                         const parts = extra.split('x ');
                         const quantity = parseInt(parts[0], 10);
                         const name = parts[1].trim();
                         
-                        const ingredienteResult = await client.query('SELECT id FROM Ingredientes WHERE nome = $1', [name]);
+                        const ingredienteResult = await client.query('SELECT id, unidade FROM Ingredientes WHERE nome = $1', [name]);
                         
                         if (ingredienteResult.rows.length > 0) {
                             const ingredienteId = ingredienteResult.rows[0].id;
+                            // Assumimos que adicionais são vendidos por unidade (un) ou porção (g)
+                            // A lógica pode ser ajustada se necessário
+                            const quantidadeAdicionalADeduzir = 1 * quantity; // Ex: 1 Ovo, 1 Porção de Bacon (ex: 30g)
+                            
                             const sqlUpdateAdicional = `UPDATE Ingredientes SET quantidade_estoque = quantidade_estoque - $1 WHERE id = $2 AND quantidade_estoque >= $3`;
-                            const updateAdicionalResult = await client.query(sqlUpdateAdicional, [quantity, ingredienteId, quantity]);
+                            const updateAdicionalResult = await client.query(sqlUpdateAdicional, [quantidadeAdicionalADeduzir, ingredienteId, quantidadeAdicionalADeduzir]);
                             
                             if (updateAdicionalResult.rowCount === 0) {
                                 throw new Error(`Estoque insuficiente para o adicional: ${name}`);
@@ -218,7 +224,6 @@ app.post('/api/pedidos', async (req, res) => {
                         }
                     }
                 }
-                // --- FIM DA LÓGICA CORRIGIDA ---
             }
         }
         
