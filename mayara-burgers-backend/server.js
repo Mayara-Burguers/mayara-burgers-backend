@@ -1,10 +1,13 @@
 /*
 ============================================================
 | SERVER.JS COM RECURSOS DE IA - MAYARA BURGUER'S          |
-| CORREÇÃO: Nomes das tabelas em minúsculas para           |
-| compatibilidade com PostgreSQL.                          |
+| CORREÇÃO FINAL: Força o uso de IPv4 para resolver o erro |
+| de conexão ENETUNREACH com o banco de dados.             |
 ============================================================
 */
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first'); // <--- ESSA É A CORREÇÃO!
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
