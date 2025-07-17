@@ -49,11 +49,11 @@ app.get('/', (req, res) => {
 // --- ROTAS DE PRODUTOS ---
 app.get('/api/produtos', async (req, res) => {
     try {
-        // Equivalente a: SELECT p.*, c.nome AS categoria_nome FROM Produtos p JOIN Categorias c ...
+        // Equivalente a: SELECT p.*, c.nome AS categoria_nome FROM Produtos p JOIN categorias c ...
         const { data, error } = await supabase
             .from('Produtos')
-            .select('*, categoria_nome:Categorias(nome)') // Pega tudo de Produtos e o nome da Categoria relacionada
-            .order('id', { foreignTable: 'Categorias', ascending: true })
+            .select('*, categoria_nome:categorias(nome)') // Pega tudo de Produtos e o nome da Categoria relacionada
+            .order('id', { foreignTable: 'categorias', ascending: true })
             .order('id', { ascending: true });
 
         if (error) throw error;
@@ -173,7 +173,7 @@ app.get('/api/produtos/:id/receita', async (req, res) => {
 // --- ROTA DE CATEGORIAS ---
 app.get('/api/categorias', async (req, res) => {
     try {
-        const { data, error } = await supabase.from('Categorias').select('*').order('ordem');
+        const { data, error } = await supabase.from('categorias').select('*').order('ordem');
         if (error) throw error;
         res.status(200).json(data);
     } catch (error) {
@@ -182,10 +182,10 @@ app.get('/api/categorias', async (req, res) => {
     }
 });
 
-app.post('/api/categorias', async (req, res) => {
+app.post('/api/', async (req, res) => {
     try {
         const { nome, ordem } = req.body;
-        const { data, error } = await supabase.from('Categorias').insert([{ nome, ordem }]).select().single();
+        const { data, error } = await supabase.from('categorias').insert([{ nome, ordem }]).select().single();
         if (error) throw error;
         res.status(201).json({ id: data.id, message: 'Categoria criada com sucesso!' });
     } catch (error) {
@@ -206,12 +206,12 @@ app.post('/api/pedidos', async (req, res) => {
             // Encontrar o produto para pegar a receita
             const { data: produtoInfo, error: produtoError } = await supabase
                 .from('Produtos')
-                .select('id, Categorias(nome)')
+                .select('id, categorias(nome)')
                 .eq('nome', item.name)
                 .single();
 
             if (produtoError || !produtoInfo) continue; // Pula se não achar o produto
-            if (produtoInfo.Categorias.nome === 'Bebidas') continue; // Pula bebidas
+            if (produtoInfo.categorias.nome === 'Bebidas') continue; // Pula bebidas
 
             const { data: receita, error: receitaError } = await supabase
                 .from('Receitas')
