@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 3. CARREGAMENTO DO MENU
     async function carregarMenu() {
         try {
-            const response = await fetch('https://mayara-backend-servidor.onrender.com');
+            const response = await fetch('https://mayara-backend-servidor.onrender.com/api/produtos');
             if (!response.ok) throw new Error('Erro de rede');
             todosOsProdutos = await response.json();
             renderizarMenu();
@@ -392,7 +392,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             };
 
             try {
-                const response = await fetch('https://mayara-backend-servidor.onrender.com', {
+                const response = await fetch('https://mayara-backend-servidor.onrender.com/api/pedidos', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(pedidoParaEnviar)
