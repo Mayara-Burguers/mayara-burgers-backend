@@ -1,9 +1,8 @@
 /*
 ============================================================
-| JAVASCRIPT COMPLETO E FINAL - MAYARA BURGUER'S           |
-| VERSÃO: DATABASE-DRIVEN                                  |
-| CORREÇÃO: Reestruturação da lógica de eventos do modal   |
-| para garantir o funcionamento correto.                   |
+| JAVASCRIPT COMPLETO E CORRIGIDO - MAYARA BURGUER'S       |
+| CORREÇÃO: Lógica de renderização do menu e eventos      |
+| restaurados para garantir a exibição dos produtos.       |
 ============================================================
 */
 document.addEventListener("DOMContentLoaded", async () => {
@@ -24,7 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let todosOsProdutos = [];
 
-    // 2. DELEGAÇÃO DE EVENTOS GERAIS
+    // 2. DELEGAÇÃO DE EVENTOS
     menuContainer.addEventListener('click', (e) => {
         const btnPersonalize = e.target.closest('.btn-personalize');
         const btnSimpleAdd = e.target.closest('.simple-add-btn');
@@ -64,16 +63,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 3. CARREGAMENTO DO MENU
     async function carregarMenu() {
         try {
-            const response = await fetch('https://mayara-backend-servidor.onrender.com/api/produtos');
+            const response = await fetch('http://localhost:3001/api/produtos');
             if (!response.ok) throw new Error('Erro de rede');
             todosOsProdutos = await response.json();
-            renderizarMenu();
+            renderizarMenu(); // <-- Esta chamada estava faltando
         } catch (error) {
             console.error("Erro ao carregar o menu:", error);
             menuContainer.innerHTML = "<p class='text-center text-danger'>FALHA NA CONEXÃO. Verifique se o servidor backend está rodando.</p>";
         }
     }
-
+    
     function renderizarMenu() {
         const categorias = todosOsProdutos.reduce((acc, produto) => {
             const catNome = produto.categoria_nome || 'Outros';
@@ -83,14 +82,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         menuContainer.innerHTML = '';
         navContainer.innerHTML = '';
-
+        
         let first = true;
-        const categoriasOrdenadas = Object.keys(categorias); // Idealmente viria ordenado do backend
-
-        for (const nomeCategoria of categoriasOrdenadas) {
+        for (const nomeCategoria in categorias) {
             const slug = nomeCategoria.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             navContainer.innerHTML += `<a href="#${slug}" class="btn btn-orange ${first ? 'active' : ''}">${nomeCategoria}</a>`;
-
+            
             const section = document.createElement('section');
             section.id = slug;
             section.className = 'categoria';
@@ -130,7 +127,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const buttonHtml = produto.categoria_nome === 'Bebidas'
             ? `<button class="btn btn-sm btn-orange simple-add-btn" data-item='${JSON.stringify({ nome: produto.nome, preco: produto.preco_base })}'>Adicionar</button>`
             : `<button class="btn btn-sm btn-orange btn-personalize" data-product-id="${produto.id}"><i class="fas fa-utensils"></i> Personalizar</button>`;
-
+        
         return `<div class="col-md-6 col-lg-4"><div class="card item h-100"><img src="${produto.imagem_url || 'placeholder.jpg'}" class="card-img-top" alt="${produto.nome}"><div class="card-body d-flex flex-column"><h3 class="card-title">${produto.nome}</h3><p class="card-text">${produto.descricao || ''}</p><div class="d-flex justify-content-between align-items-center mt-auto"><span class="price">${parseFloat(produto.preco_base).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>${buttonHtml}</div></div></div></div>`;
     }
 
@@ -146,7 +143,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     function preencherEabrirModal(produto) {
         const modalBody = modalGenericoEl.querySelector('.modal-body');
         modalGenericoEl.querySelector('.nome-lanche').textContent = produto.nome;
-
+        
         let htmlPao = (produto.categoria_nome === 'Lanches')
             ? `<div class="option-group"><div class="option-title"><i class="fas fa-bread-slice"></i> Tipo de Pão</div><div class="form-check"><input class="form-check-input" type="radio" name="paoGenerico" id="paoPadrao" value="${produto.preco_base}" checked data-nome="Pão de Hambúrguer"><label class="form-check-label" for="paoPadrao">Pão de Hambúrguer (Padrão) - ${parseFloat(produto.preco_base).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</label></div>${produto.preco_pao_especial ? `<div class="form-check"><input class="form-check-input" type="radio" name="paoGenerico" id="paoFrances" value="${produto.preco_pao_especial}" data-nome="Pão Francês"><label class="form-check-label" for="paoFrances">Pão Francês - ${parseFloat(produto.preco_pao_especial).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</label></div><div class="form-check"><input class="form-check-input" type="radio" name="paoGenerico" id="paoEspecial" value="${produto.preco_pao_especial}" data-nome="Pão Especial"><label class="form-check-label" for="paoEspecial">Pão Especial - ${parseFloat(produto.preco_pao_especial).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</label></div>` : ''}${produto.preco_pao_baby ? `<div class="form-check"><input class="form-check-input" type="radio" name="paoGenerico" id="paoBaby" value="${produto.preco_pao_baby}" data-nome="Pão Baby"><label class="form-check-label" for="paoBaby">Pão Baby - ${parseFloat(produto.preco_pao_baby).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</label></div>` : ''}</div>`
             : '';
@@ -170,24 +167,24 @@ document.addEventListener("DOMContentLoaded", async () => {
             });
             htmlAdicionais += `</div></div>`;
         }
-
+        
         let htmlObservacoes = '';
         if (produto.categoria_nome !== 'Porções' && produto.categoria_nome !== 'Açaí & Cupuaçu') {
             htmlObservacoes = `<div class="option-group"><div class="option-title"><i class="fas fa-edit"></i> Observações</div><textarea class="observacoes-textarea form-control" placeholder="Ex: Sem cebola..."></textarea></div>`;
         }
-
+        
         modalBody.innerHTML = htmlPao + htmlAdicionais + htmlObservacoes + `<div class="current-price">Total: R$ <span class="preco-final">0,00</span></div>`;
-
+        
         if (!htmlPao) {
             modalGenericoEl.dataset.baseprice = produto.preco_base;
         }
-
+        
         atualizarPreco(modalGenericoEl);
         modalGenerico.show();
     }
-
+    
     modalGenericoEl.addEventListener('change', e => {
-        if (e.target.matches('.adicional-checkbox') || e.target.matches('input[name="paoGenerico"]')) {
+        if (e.target.matches('.adicional-checkbox, input[name="paoGenerico"]')) {
             if (e.target.matches('.adicional-checkbox')) {
                 const quantidadeInput = e.target.nextElementSibling.nextElementSibling;
                 if (e.target.checked) {
@@ -226,7 +223,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         let total = paoSelecionado ? parseFloat(paoSelecionado.value) : parseFloat(modal.dataset.baseprice || 0);
 
         modal.querySelectorAll('.adicional-item').forEach(item => {
-            total += (parseInt(item.querySelector('.adicional-quantidade').value) || 0) * (parseFloat(item.querySelector('.adicional-quantidade').dataset.price) || 0);
+             total += (parseInt(item.querySelector('.adicional-quantidade').value) || 0) * (parseFloat(item.querySelector('.adicional-quantidade').dataset.price) || 0);
         });
         modal.querySelector('.preco-final').textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
@@ -239,7 +236,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         alert(`${item.name} adicionado ao carrinho!`);
         renderizarCarrinho();
     }
-
+    
     document.querySelector('#modalGenerico .btn-add-custom').addEventListener('click', function () {
         const modal = this.closest('.modal-personalizacao');
         const nomeProduto = modal.querySelector('.nome-lanche').textContent.trim();
@@ -252,13 +249,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         adicionarAoCarrinho({ name: nomeProduto, bread: pao, extras: adicionais, notes, quantity: 1, price: preco });
         modalGenerico.hide();
     });
-
+    
     function renderizarCarrinho() {
         const container = document.getElementById("carrinho-itens");
         const totalSpan = document.getElementById("total-carrinho");
         const carrinho = JSON.parse(localStorage.getItem("cart")) || [];
         let total = 0;
-
+        
         container.innerHTML = carrinho.length === 0 ? '<p class="text-muted">Seu carrinho está vazio.</p>' : '';
         if (carrinho.length > 0) {
             let tabela = `<table class="table"><thead><tr><th>Item</th><th>Qtd</th><th>Preço</th><th></th></tr></thead><tbody>`;
@@ -269,20 +266,20 @@ document.addEventListener("DOMContentLoaded", async () => {
             tabela += `</tbody></table>`;
             container.innerHTML = tabela;
         }
-
+        
         const sacheQtd = parseInt(localStorage.getItem("sachesAlho")) || 0;
         if (sacheQtd > 0) {
             const alhoPrecoTotal = sacheQtd * 1.00;
             total += alhoPrecoTotal;
             container.innerHTML += `<div class="mt-2" style="border-top: 1px dashed #ccc; padding-top: 10px;"><strong>Sachês de Alho:</strong> ${sacheQtd} x R$ 1,00 = ${alhoPrecoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>`;
         }
-
+        
         totalSpan.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         atualizarQuantidadeIcone();
     }
-
+    
     document.getElementById("carrinho-itens").addEventListener('click', (e) => {
-        if (e.target.closest('.btn-remover')) {
+        if(e.target.closest('.btn-remover')) {
             const index = parseInt(e.target.closest('.btn-remover').dataset.index);
             const carrinho = JSON.parse(localStorage.getItem("cart"));
             carrinho.splice(index, 1);
@@ -295,7 +292,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const carrinho = JSON.parse(localStorage.getItem("cart")) || [];
         document.getElementById("carrinho-quantidade").textContent = carrinho.reduce((soma, item) => soma + item.quantity, 0);
     }
-
+    
     // 6. GESTÃO DE CLIENTE E FINALIZAÇÃO
     (function setupFinalizacao() {
         const modalClienteEl = document.getElementById("modalDadosCliente");
@@ -312,10 +309,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             const tipoEntrega = localStorage.getItem("tipoEntrega") || 'delivery';
             if (tipoEntrega === 'retirada') {
                 campoEndereco.style.display = "none";
-                document.getElementById("inputEnderecoCliente").required = false;
+                if(document.getElementById("inputEnderecoCliente")) document.getElementById("inputEnderecoCliente").required = false;
             } else {
                 campoEndereco.style.display = "block";
-                document.getElementById("inputEnderecoCliente").required = true;
+                if(document.getElementById("inputEnderecoCliente")) document.getElementById("inputEnderecoCliente").required = true;
             }
         }
 
@@ -331,7 +328,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             else deliveryRadio.checked = true;
             atualizarVisibilidadeEndereco();
         }
-
+        
         function verificarDadosCliente() {
             const nomeSalvo = localStorage.getItem("nomeCliente");
             const telefoneSalvo = localStorage.getItem("telefoneCliente");
@@ -344,7 +341,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
             return true;
         }
-
+        
         document.getElementById("btnSalvarCliente").addEventListener("click", () => {
             const nome = document.getElementById("inputNomeCliente").value.trim();
             const telefone = document.getElementById("inputTelefoneCliente").value.trim();
@@ -371,10 +368,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (carrinho.length === 0 && sachesAlho === 0) {
                 return alert("Seu carrinho está vazio!");
             }
-
+            
             let totalValue = carrinho.reduce((acc, item) => acc + (item.price * item.quantity), 0);
             totalValue += sachesAlho * 1.00;
-
+            
             const molhosSelecionados = [];
             if (localStorage.getItem("molhoKetchup") === "true") molhosSelecionados.push("Ketchup");
             if (localStorage.getItem("molhoMostarda") === "true") molhosSelecionados.push("Mostarda");
@@ -390,15 +387,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                 saches_alho: sachesAlho,
                 molhos: molhosSelecionados.join(', ') || null
             };
-
+            
             try {
-                const response = await fetch('https://mayara-backend-servidor.onrender.com/api/pedidos', {
+                const response = await fetch('http://localhost:3001/api/pedidos', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(pedidoParaEnviar)
                 });
-                if (!response.ok) throw new Error('Falha ao registrar o pedido.');
-
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.error || 'Falha ao registrar o pedido.');
+                }
+                
                 const resultado = await response.json();
                 alert(`Seu pedido Nº ${resultado.pedidoId} foi recebido!`);
 
@@ -413,36 +413,36 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 mensagemWhats += `%0A*--- ITENS ---*%0A`;
                 pedidoParaEnviar.itens.forEach(item => {
-                    mensagemWhats += `*${item.quantity}x ${item.name}* (${item.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})%0A`;
+                    mensagemWhats += `*${item.quantity}x ${item.name}* (${item.price.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})})%0A`;
                     if (item.bread && item.bread !== 'Padrão' && item.bread !== 'Pão de Hambúrguer') mensagemWhats += `  - Pão: ${item.bread}%0A`;
                     if (item.extras && item.extras.length > 0) mensagemWhats += `  - Adicionais: ${item.extras.join(', ')}%0A`;
                     if (item.notes) mensagemWhats += `  - Obs: ${item.notes}%0A`;
                 });
 
-                if (sachesAlho > 0) mensagemWhats += `*${sachesAlho}x Sachê de Alho*%0A`;
-                if (molhosSelecionados.length > 0) mensagemWhats += `*Molhos:* ${molhosSelecionados.join(', ')}%0A`;
+                if(sachesAlho > 0) mensagemWhats += `*${sachesAlho}x Sachê de Alho*%0A`;
+                if(molhosSelecionados.length > 0) mensagemWhats += `*Molhos:* ${molhosSelecionados.join(', ')}%0A`;
                 mensagemWhats += `%0A*Total do Pedido:* ${pedidoParaEnviar.valor_total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
-
+                
                 window.open("https://wa.me/5512992050080?text=" + mensagemWhats, '_blank');
-
+                
                 localStorage.removeItem("cart");
                 localStorage.removeItem("sachesAlho");
                 localStorage.removeItem("molhoKetchup");
                 localStorage.removeItem("molhoMostarda");
                 localStorage.removeItem("molhoMaionese");
-                if (incluirMolhosCheckbox) incluirMolhosCheckbox.checked = false;
-                if (opcoesMolhosIndividuais) opcoesMolhosIndividuais.style.display = 'none';
+                if(incluirMolhosCheckbox) incluirMolhosCheckbox.checked = false;
+                if(opcoesMolhosIndividuais) opcoesMolhosIndividuais.style.display = 'none';
                 document.querySelectorAll('#opcoesMolhosIndividuais input').forEach(c => c.checked = false);
-                if (quantidadeAlhoInput) quantidadeAlhoInput.value = 0;
+                if(quantidadeAlhoInput) quantidadeAlhoInput.value = 0;
 
                 renderizarCarrinho();
 
             } catch (error) {
                 console.error("Erro ao finalizar o pedido:", error);
-                alert("Houve um problema ao conectar com nosso sistema.");
+                alert("Houve um problema ao conectar com nosso sistema: " + error.message);
             }
         });
-
+        
         incluirMolhosCheckbox?.addEventListener("change", function () {
             opcoesMolhosIndividuais.style.display = this.checked ? "block" : "none";
         });
@@ -458,7 +458,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             renderizarCarrinho();
         });
     })();
-
+    
     // 7. INICIALIZAÇÃO DA PÁGINA
     await carregarMenu();
     renderizarCarrinho();
