@@ -137,9 +137,8 @@
             let ingredientesData = [];
             let receitaAtual = [];
 
-            const BASE_URL = 'http://localhost:3001/api'; // Mude aqui quando for para produção
+            const BASE_URL = 'http://localhost:3001/api';
 
-            // FUNÇÕES DE FETCH
             async function fetchData(endpoint) {
                 try {
                     const response = await fetch(`${BASE_URL}${endpoint}`);
@@ -151,7 +150,6 @@
                 }
             }
 
-            // FUNÇÕES DE RENDERIZAÇÃO
             async function renderizarPedidos() {
                 const container = document.getElementById("historico-container");
                 container.innerHTML = "<p>Carregando pedidos...</p>";
@@ -162,18 +160,18 @@
                     return;
                 }
                 const pedidosAgrupados = pedidos.reduce((acc, pedido) => {
-                    const data = new Date(pedido.data_hora).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                    const data = new Date(pedido.data_hora).toLocaleDateString('pt-BR', {timeZone: 'America/Sao_Paulo'});
                     (acc[data] = acc[data] || []).push(pedido);
                     return acc;
                 }, {});
-                for (const dataString in pedidosAgrupados) {
+                for(const dataString in pedidosAgrupados) {
                     const dateGroupDiv = document.createElement('div');
                     dateGroupDiv.className = 'date-group';
                     dateGroupDiv.innerHTML = `<h3 class="date-header">${dataString}</h3>`;
                     pedidosAgrupados[dataString].forEach(pedido => {
                         let itensHtml = '';
                         pedido.itens.forEach(item => {
-                            itensHtml += `<div class="item-detail"><p><strong>${item.quantidade}x ${item.produto_nome}</strong></p><small>${item.adicionais ? `Adcs: ${item.adicionais}<br>` : ''}${item.observacoes ? `Obs: ${item.observacoes}` : ''}</small></div>`;
+                            itensHtml += `<div class="item-detail"><p><strong>${item.quantidade}x ${item.produto_nome}</strong></p><small>${item.adicionais ? `Adcs: ${item.adicionais}<br>`: ''}${item.observacoes ? `Obs: ${item.observacoes}`: ''}</small></div>`;
                         });
                         const statusOptions = ['Recebido', 'Em Preparo', 'Pronto para Retirada', 'Saiu para Entrega', 'Finalizado', 'Cancelado'].map(s => `<option value="${s}" ${pedido.status === s ? 'selected' : ''}>${s}</option>`).join('');
                         const statusSlug = pedido.status.toLowerCase().replace(/\s+/g, '-');
@@ -221,7 +219,6 @@
                 }
             }
 
-            // LÓGICA DO MODAL DE PRODUTOS
             async function abrirModalProduto(produto = null) {
                 formProduto.reset();
                 document.getElementById('produto-categoria').innerHTML = categoriasData.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
@@ -246,7 +243,7 @@
                 renderizarListaReceita();
                 modalProduto.style.display = 'block';
             }
-            
+
             async function popularSelectIngredientes() {
                 const select = document.getElementById('receita-ingrediente');
                 select.innerHTML = ingredientesData.map(i => `<option value="${i.id}" data-unidade="${i.unidade}">${i.nome}</option>`).join('');
@@ -257,13 +254,11 @@
                 container.innerHTML = '';
                 receitaAtual.forEach((item, index) => {
                     const ingrediente = ingredientesData.find(i => i.id === item.ingrediente_id);
-                    const nome = ingrediente ? ingrediente.nome : 'Ingrediente não encontrado';
-                    const unidade = ingrediente ? ingrediente.unidade : '';
-                    container.innerHTML += `<div class="receita-item" data-index="${index}"><span>${nome} - ${item.quantidade_usada} ${unidade}</span><button type="button" class="btn-action delete-btn">&times;</button></div>`;
+                    container.innerHTML += `<div class="receita-item" data-index="${index}"><span>${item.ingrediente_nome || ingrediente.nome} - ${item.quantidade_usada} ${item.unidade || ingrediente.unidade}</span><button type="button" class="btn-action delete-btn">&times;</button></div>`;
                 });
             }
 
-            // DELEGAÇÃO DE EVENTOS
+            // EVENTOS DE AÇÃO
             mainAdmin.addEventListener('click', async (e) => {
                 const target = e.target;
                 if (target.matches('.admin-nav-item')) {
@@ -271,28 +266,29 @@
                     target.classList.add('active');
                     document.getElementById(`tab-${target.dataset.tab}`).classList.add('active');
                 }
-                else if(target.id === 'btn-add-produto') abrirModalProduto();
-                else if(target.closest('.update-stock-btn')) {
-                    const id = target.closest('.update-stock-btn').dataset.id;
-                    const input = document.getElementById(`stock-input-${id}`);
-                    if (input.value !== '') {
-                        await fetch(`${BASE_URL}/ingredientes/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantidade_estoque: input.value }) });
-                        renderizarEstoque();
-                    }
+                else if (target.id === 'btn-add-produto') {
+                    abrirModalProduto();
                 }
-                else if(target.closest('.delete-btn') && target.closest('#estoque-table')) {
-                    const id = target.closest('.delete-btn').dataset.id;
+                else if (target.matches('.update-stock-btn')) {
+                    const id = target.dataset.id;
+                    const input = document.getElementById(`stock-input-${id}`);
+                    if (input.value === '') return;
+                    await fetch(`${BASE_URL}/ingredientes/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantidade_estoque: input.value }) });
+                    renderizarEstoque();
+                }
+                else if (target.matches('.delete-btn') && target.closest('#estoque-table')) {
+                    const id = target.dataset.id;
                     if (confirm('Tem certeza?')) {
                         await fetch(`${BASE_URL}/ingredientes/${id}`, { method: 'DELETE' });
                         renderizarEstoque();
                     }
                 }
-                else if(target.matches('.edit-btn') && target.closest('#produtos-list-container')) {
+                else if (target.matches('.edit-btn') && target.closest('#produtos-list-container')) {
                     const id = target.dataset.id;
                     const produto = produtosData.find(p => p.id == id);
                     if(produto) abrirModalProduto(produto);
                 }
-                else if(target.matches('.delete-btn') && target.closest('#produtos-list-container')) {
+                else if (target.matches('.delete-btn') && target.closest('#produtos-list-container')) {
                     const id = target.dataset.id;
                     if (confirm('Tem certeza?')) {
                         await fetch(`${BASE_URL}/produtos/${id}`, { method: 'DELETE' });
@@ -307,12 +303,12 @@
                 }
             });
 
-            // EVENTOS DE FORMULÁRIOS E MODAL
             document.querySelector('#modal-produto .close-btn').onclick = () => modalProduto.style.display = 'none';
+            
             document.getElementById('btn-add-receita').addEventListener('click', () => {
                 const select = document.getElementById('receita-ingrediente');
+                if(!select.value) return;
                 const ingrediente_id = parseInt(select.value);
-                if(!ingrediente_id) return alert('Nenhum ingrediente selecionado.');
                 const selectedOption = select.options[select.selectedIndex];
                 const ingrediente_nome = selectedOption.text.split('(')[0].trim();
                 const unidade = selectedOption.dataset.unidade;
@@ -343,6 +339,7 @@
                 e.preventDefault();
                 const data = { nome: document.getElementById('nome-categoria').value, ordem: document.getElementById('ordem-categoria').value };
                 await fetch(`${BASE_URL}/categorias`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                alert('Categoria adicionada!');
                 e.target.reset();
                 categoriasData = await fetchData('/categorias');
             });
@@ -363,9 +360,13 @@
                 };
                 const method = id ? 'PUT' : 'POST';
                 const url = id ? `${BASE_URL}/produtos/${id}` : `${BASE_URL}/produtos`;
-                await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-                modalProduto.style.display = 'none';
-                renderizarProdutos();
+                const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                if (response.ok) {
+                    modalProduto.style.display = 'none';
+                    renderizarProdutos();
+                } else {
+                    alert('Falha ao salvar produto.');
+                }
             });
             
             // CARREGAMENTO INICIAL
