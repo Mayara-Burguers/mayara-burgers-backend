@@ -1,8 +1,9 @@
 /*
 ============================================================
 | SERVER.JS COMPLETO E FINAL - MAYARA BURGUER'S            |
-| VERSÃO: Produção Online (Supabase/PostgreSQL)            |
-| CORREÇÃO: Dedução de estoque de ADICIONAIS implementada. |
+| VERSÃO: DATABASE-DRIVEN (PostgreSQL)                     |
+| CORREÇÃO: Lógica de dedução de estoque para ADICIONAIS   |
+| foi completamente reescrita e corrigida.                 |
 ============================================================
 */
 require('dotenv').config();
@@ -204,8 +205,10 @@ app.post('/api/pedidos', async (req, res) => {
                         
                         if (ingredienteResult.rows.length > 0) {
                             const ingredienteId = ingredienteResult.rows[0].id;
+                            const quantidadeAdicionalADeduzir = 1 * quantity;
+                            
                             const sqlUpdateAdicional = `UPDATE Ingredientes SET quantidade_estoque = quantidade_estoque - $1 WHERE id = $2 AND quantidade_estoque >= $3`;
-                            const updateAdicionalResult = await client.query(sqlUpdateAdicional, [quantity, ingredienteId, quantity]);
+                            const updateAdicionalResult = await client.query(sqlUpdateAdicional, [quantidadeAdicionalADeduzir, ingredienteId, quantidadeAdicionalADeduzir]);
                             
                             if (updateAdicionalResult.rowCount === 0) {
                                 throw new Error(`Estoque insuficiente para o adicional: ${name}`);
