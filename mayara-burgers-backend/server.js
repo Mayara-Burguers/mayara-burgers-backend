@@ -1,11 +1,3 @@
-/*
-============================================================
-| SERVIDOR BACKEND COMPLETO E FINAL - MAYARA BURGUER'S     |
-| VERSÃO: DATABASE-DRIVEN (PostgreSQL)                     |
-| INCLUI: Gerenciamento completo de Produtos, Categorias,  |
-| Pedidos (com status) e Estoque (com dedução automática). |
-============================================================
-*/
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -195,7 +187,6 @@ app.post('/api/pedidos', async (req, res) => {
                 const quantidadeADeduzir = ingredienteDaReceita.quantidade_usada * item.quantity;
                 const sqlUpdateEstoque = `UPDATE Ingredientes SET quantidade_estoque = quantidade_estoque - $1 WHERE id = $2 AND quantidade_estoque >= $3`;
                 const updateResult = await client.query(sqlUpdateEstoque, [quantidadeADeduzir, ingredienteDaReceita.ingrediente_id, quantidadeADeduzir]);
-                
                 if (updateResult.rowCount === 0) {
                     const ingredienteInfoResult = await client.query('SELECT nome FROM Ingredientes WHERE id = $1', [ingredienteDaReceita.ingrediente_id]);
                     throw new Error(`Estoque insuficiente para: ${ingredienteInfoResult.rows[0].nome}`);
