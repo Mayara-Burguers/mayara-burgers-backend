@@ -1,9 +1,9 @@
 /*
 ============================================================
-| SERVER.JS COMPLETO E FINAL - MAYARA BURGUER'S            |
+| SERVER.JS COMPLETO E CORRIGIDO - MAYARA BURGUER'S        |
 | VERSÃO: DATABASE-DRIVEN (PostgreSQL)                     |
 | CORREÇÃO: Lógica de dedução de estoque para ADICIONAIS   |
-| foi completamente reescrita e corrigida.                 |
+| e TROCA DE PÃO foi implementada.                         |
 ============================================================
 */
 require('dotenv').config();
@@ -178,14 +178,29 @@ app.post('/api/pedidos', async (req, res) => {
         await client.query('BEGIN');
 
         for (const item of itens) {
+            // Busca informações do produto, incluindo a categoria
             const produtoInfoResult = await client.query('SELECT p.id, c.nome as categoria_nome FROM Produtos p JOIN Categorias c ON p.categoria_id = c.id WHERE p.nome = $1', [item.name]);
             if (produtoInfoResult.rows.length === 0) throw new Error(`Produto não encontrado: ${item.name}`);
             
+            // Só deduz estoque se não for uma bebida
             if (produtoInfoResult.rows[0].categoria_nome !== 'Bebidas') {
                 const produtoId = produtoInfoResult.rows[0].id;
-                const receitaResult = await client.query('SELECT ingrediente_id, quantidade_usada FROM Receitas WHERE produto_id = $1', [produtoId]);
+                // Busca a receita e o nome do ingrediente para lógicas futuras
+                const receitaResult = await client.query('SELECT r.ingrediente_id, r.quantidade_usada, i.nome as ingrediente_nome FROM Receitas r JOIN Ingredientes i ON r.ingrediente_id = i.id WHERE r.produto_id = $1', [produtoId]);
                 
+                // ================== LÓGICA DE DEDUÇÃO DE PÃO (INÍCIO) ==================
+                const paoPadraoNome = 'Pão de Hambúrguer'; // IMPORTANTE: Nome exato do pão padrão no seu DB
+                const paoEscolhido = item.bread; // Vem do frontend: Ex: "Pão Francês"
+                const trocouDePao = paoEscolhido && paoEscolhido !== paoPadraoNome;
+                // ================== LÓGICA DE DEDUÇÃO DE PÃO (FIM) ====================
+
+                // Deduz ingredientes da receita base
                 for (const ingredienteDaReceita of receitaResult.rows) {
+                    // SE o cliente trocou de pão E este ingrediente da receita é o pão padrão, PULE a dedução.
+                    if (trocouDePao && ingredienteDaReceita.ingrediente_nome === paoPadraoNome) {
+                        continue; 
+                    }
+
                     const quantidadeADeduzir = ingredienteDaReceita.quantidade_usada * item.quantity;
                     const sqlUpdateEstoque = `UPDATE Ingredientes SET quantidade_estoque = quantidade_estoque - $1 WHERE id = $2 AND quantidade_estoque >= $3`;
                     const updateResult = await client.query(sqlUpdateEstoque, [quantidadeADeduzir, ingredienteDaReceita.ingrediente_id, quantidadeADeduzir]);
@@ -195,29 +210,40 @@ app.post('/api/pedidos', async (req, res) => {
                     }
                 }
 
+                // SE o pão foi trocado, deduz o pão ESCOLHIDO do estoque
+                if (trocouDePao) {
+                    const quantidadePao = 1 * item.quantity; // 1 pão por lanche
+                    const sqlUpdatePaoEscolhido = `UPDATE Ingredientes SET quantidade_estoque = quantidade_estoque - $1 WHERE nome = $2 AND quantidade_estoque >= $3`;
+                    const updatePaoResult = await client.query(sqlUpdatePaoEscolhido, [quantidadePao, paoEscolhido, quantidadePao]);
+                    if (updatePaoResult.rowCount === 0) {
+                        throw new Error(`Estoque insuficiente para o pão escolhido: ${paoEscolhido}`);
+                    }
+                }
+
+                // ================== LÓGICA DE DEDUÇÃO DE ADICIONAIS (INÍCIO) ==================
                 if (item.extras && item.extras.length > 0) {
                     for (const extra of item.extras) {
-                        const parts = extra.split('x ');
+                        const parts = extra.split('x '); // Ex: "1x Bacon" -> ["1", "Bacon"]
                         const quantity = parseInt(parts[0], 10);
                         const name = parts[1].trim();
                         
+                        // IMPORTANTE: O nome do adicional no frontend (java.js) deve ser IDÊNTICO ao nome na sua tabela de Ingredientes.
+                        // Ex: se no frontend é "Bacon", no DB deve ser "Bacon".
                         const ingredienteResult = await client.query('SELECT id, unidade FROM Ingredientes WHERE nome = $1', [name]);
                         
                         if (ingredienteResult.rows.length > 0) {
                             const ingredienteId = ingredienteResult.rows[0].id;
-                            let quantidadeAdicionalADeduzir = quantity; // Padrão é 1 unidade para cada adicional
-                            
-                            // Lógica para definir a quantidade a deduzir com base na unidade
                             const unidade = ingredienteResult.rows[0].unidade;
-                            if (unidade === 'g') {
-                                // Definimos uma quantidade padrão em gramas para porções de adicionais
-                                // Ex: Uma porção de bacon é 30g, uma de queijo é 20g
-                                switch(name) {
-                                    case 'Bacon Fatiado': quantidadeAdicionalADeduzir = 30 * quantity; break;
-                                    case 'Queijo Mussarela': quantidadeAdicionalADeduzir = 20 * quantity; break;
-                                    // Adicione outros casos aqui
-                                    default: quantidadeAdicionalADeduzir = 20 * quantity; // Um padrão para outros
-                                }
+                            let quantidadeAdicionalADeduzir = 0;
+
+                            // Lógica simples para deduzir uma "porção" do adicional
+                            if (unidade === 'g' || unidade === 'kg' || unidade === 'ml' || unidade === 'L') {
+                                // Para itens medidos por peso/volume, definimos uma porção padrão.
+                                // Ex: uma porção de bacon extra são 30g.
+                                quantidadeAdicionalADeduzir = 30 * quantity;
+                            } else {
+                                // Para itens medidos por unidade (fatia, un), deduz a quantidade solicitada.
+                                quantidadeAdicionalADeduzir = 1 * quantity;
                             }
                             
                             const sqlUpdateAdicional = `UPDATE Ingredientes SET quantidade_estoque = quantidade_estoque - $1 WHERE id = $2 AND quantidade_estoque >= $3`;
@@ -227,20 +253,30 @@ app.post('/api/pedidos', async (req, res) => {
                                 throw new Error(`Estoque insuficiente para o adicional: ${name}`);
                             }
                         } else {
+                            // Este aviso ajuda a identificar nomes de ingredientes que não batem entre o frontend e o backend.
                             console.warn(`Adicional "${name}" não encontrado na tabela de ingredientes. Estoque não deduzido.`);
                         }
                     }
                 }
+                // ================== LÓGICA DE DEDUÇÃO DE ADICIONAIS (FIM) ====================
             }
         }
         
+        // Insere o pedido no banco de dados após verificar todo o estoque
         const pedidoSql = `INSERT INTO Pedidos (cliente_nome, cliente_telefone, cliente_endereco, tipo_entrega, valor_total, saches_alho, molhos) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`;
         const pedidoResult = await client.query(pedidoSql, [cliente_nome, cliente_telefone, cliente_endereco, tipo_entrega, valor_total, saches_alho, molhos]);
         const novoPedidoId = pedidoResult.rows[0].id;
 
+        // Insere os itens do pedido
         for (const item of itens) {
             const itemSql = `INSERT INTO Itens_do_Pedido (pedido_id, produto_nome, quantidade, preco_unitario, observacoes, adicionais) VALUES ($1, $2, $3, $4, $5, $6)`;
-            await client.query(itemSql, [novoPedidoId, item.name, item.quantity, item.price, item.notes, item.extras ? item.extras.join(', ') : null]);
+            // O campo 'bread' foi adicionado na observação para fácil visualização no painel admin
+            const observacoesFinais = [
+                (item.bread && item.bread !== 'Pão de Hambúrguer' ? `Pão: ${item.bread}` : ''),
+                item.notes
+            ].filter(Boolean).join('; ');
+
+            await client.query(itemSql, [novoPedidoId, item.name, item.quantity, item.price, observacoesFinais, item.extras ? item.extras.join(', ') : null]);
         }
         await client.query('COMMIT');
         res.status(201).json({ message: 'Pedido criado com sucesso!', pedidoId: novoPedidoId });
@@ -253,6 +289,7 @@ app.post('/api/pedidos', async (req, res) => {
         client.release();
     }
 });
+
 
 app.put('/api/pedidos/:id/status', async (req, res) => {
     try {
