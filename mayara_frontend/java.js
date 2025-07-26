@@ -77,7 +77,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     function renderizarMenu() {
         const categorias = todosOsProdutos.reduce((acc, produto) => {
-            const catNome = produto.categoria_nome.nome || 'Outros';
+            // Se a categoria existir, usa o nome dela. Se não, usa um texto padrão.
+const nomeCategoria = produto.categorias ? produto.categorias.nome : 'Sem Categoria'; || 'Outros';
             (acc[catNome] = acc[catNome] || []).push(produto);
             return acc;
         }, {});
