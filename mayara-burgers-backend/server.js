@@ -8,6 +8,23 @@
 const dns = require('dns');
 dns.setDefaultResultOrder('ipv4first'); // Mantém a correção de rede
 
+// ================== CÓDIGO DE DIAGNÓSTICO TEMPORÁRIO ==================
+// Cole este bloco logo após a linha dns.setDefaultResultOrder('ipv4first');
+
+// ATENÇÃO: Coloque o endereço do seu banco de dados aqui (sem 'postgres://')
+const DBNAME_TO_TEST = 'db.sjaozedoputohsyqegbf.supabase.co'; 
+
+console.log(`[DIAGNÓSTICO] Iniciando teste de DNS para: ${DBNAME_TO_TEST}`);
+
+dns.lookup(DBNAME_TO_TEST, { all: true }, (err, addresses) => {
+  if (err) {
+    console.error('[DIAGNÓSTICO] ERRO no dns.lookup:', err);
+    return;
+  }
+  console.log('[DIAGNÓSTICO] Endereços IP encontrados:', JSON.stringify(addresses, null, 2));
+});
+// =======================================================================
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
