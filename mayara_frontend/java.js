@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     function renderizarMenu() {
         const categorias = todosOsProdutos.reduce((acc, produto) => {
-            const catNome = produto.categoria_nome || 'Outros';
+            const catNome = produto.categoria_nome.nome || 'Outros';
             (acc[catNome] = acc[catNome] || []).push(produto);
             return acc;
         }, {});
