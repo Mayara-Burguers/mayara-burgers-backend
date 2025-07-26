@@ -1,12 +1,12 @@
 /*
 ============================================================
-| SERVER.JS COM RECURSOS DE IA - MAYARA BURGUER'S          |
-| CORREÇÃO FINAL: Força o uso de IPv4 para resolver o erro |
-| de conexão ENETUNREACH com o banco de dados.             |
+|        SERVIDOR BACK-END - MAYARA BURGUER'S              |
+|   Focado nas funcionalidades de Pedidos, Produtos e      |
+|   Estoque. A correção de IPv4 foi mantida.               |
 ============================================================
 */
 const dns = require('dns');
-dns.setDefaultResultOrder('ipv4first'); // <--- ESSA É A CORREÇÃO!
+dns.setDefaultResultOrder('ipv4first'); // Mantém a correção de rede
 
 require('dotenv').config();
 const express = require('express');
@@ -20,81 +20,8 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// --- ROTAS DE IA (GEMINI) ---
 
-async function callGemini(prompt) {
-    const apiKey = ""; 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-    
-    const payload = {
-        contents: [{
-            parts: [{ text: prompt }]
-        }]
-    };
-
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-            const errorBody = await response.json();
-            console.error("Erro da API Gemini:", errorBody);
-            throw new Error('Falha ao se comunicar com a API de IA.');
-        }
-
-        const result = await response.json();
-        
-        if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts.length > 0) {
-            return result.candidates[0].content.parts[0].text;
-        } else {
-            console.warn("API Gemini retornou uma resposta válida, mas sem conteúdo.", result);
-            throw new Error('A IA não conseguiu gerar um resultado para esta solicitação.');
-        }
-
-    } catch (error) {
-        console.error("Erro ao chamar a função callGemini:", error);
-        throw error;
-    }
-}
-
-app.post('/api/generate-name', async (req, res) => {
-    const { ingredients } = req.body;
-    if (!ingredients || ingredients.length === 0) {
-        return res.status(400).json({ error: 'É necessário fornecer ingredientes.' });
-    }
-
-    const prompt = `Sugira um nome criativo e comercial para um novo hambúrguer que tem como principais ingredientes: ${ingredients.join(', ')}. O nome deve ser em português do Brasil, curto e impactante. Retorne apenas o nome, sem frases adicionais.`;
-
-    try {
-        const generatedName = await callGemini(prompt);
-        const cleanName = generatedName.replace(/["*]/g, '').trim();
-        res.status(200).json({ name: cleanName });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/generate-description', async (req, res) => {
-    const { productName, ingredients } = req.body;
-    if (!productName || !ingredients || ingredients.length === 0) {
-        return res.status(400).json({ error: 'É necessário fornecer o nome do produto e os ingredientes.' });
-    }
-
-    const prompt = `Crie uma descrição de marketing curta (2 a 3 frases) e deliciosa para um hambúrguer chamado "${productName}" que contém os seguintes ingredientes: ${ingredients.join(', ')}. A descrição deve ser em português do Brasil, despertar a fome e usar uma linguagem informal e convidativa.`;
-
-    try {
-        const generatedDescription = await callGemini(prompt);
-        res.status(200).json({ description: generatedDescription.trim() });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-
-// --- ROTAS EXISTENTES DA APLICAÇÃO ---
+// --- ROTAS DA APLICAÇÃO ---
 
 app.get('/', (req, res) => {
     res.json({ message: "Servidor da Mayara Burguer's está no ar!" });
