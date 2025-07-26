@@ -1,8 +1,7 @@
 /*
 ============================================================
 |        SERVIDOR BACK-END - MAYARA BURGUER'S              |
-|   Refatorado para usar o Supabase Client, resolvendo o   |
-|   problema de conexão de rede (ENETUNREACH).             |
+|   Versão final com rota de pedidos funcional via RPC.    |
 ============================================================
 */
 require('dotenv').config();
@@ -41,9 +40,8 @@ app.get('/api/produtos', async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('produtos')
-           
             .select('*, categorias(nome)')
-            .order('id', { ascending: true }); // Ordenação simples
+            .order('id', { ascending: true });
 
         if (error) throw error;
         res.status(200).json(data);
@@ -55,22 +53,20 @@ app.get('/api/produtos', async (req, res) => {
 
 app.post('/api/produtos', async (req, res) => {
     try {
-        const { nome, descricao, preco_base, categoria_id, subcategoria, preco_pao_especial, preco_pao_baby, imagem_url, receita } = req.body;
+        const { nome, descricao, preco_base, categoria_id, imagem_url, receita } = req.body;
         if (!nome || !preco_base || !categoria_id) {
             return res.status(400).json({ error: 'Nome, preço e categoria são obrigatórios.' });
         }
         
-        // Insere o produto
         const { data: produtoData, error: produtoError } = await supabase
             .from('produtos')
-            .insert({ nome, descricao, preco_base, categoria_id, subcategoria, preco_pao_especial, preco_pao_baby, imagem_url })
+            .insert({ nome, descricao, preco_base, categoria_id, imagem_url })
             .select('id')
-            .single(); // .single() para pegar o objeto diretamente
+            .single();
 
         if (produtoError) throw produtoError;
         const produtoId = produtoData.id;
 
-        // Insere a receita, se houver
         if (receita && receita.length > 0) {
             const receitaParaInserir = receita.map(item => ({
                 produto_id: produtoId,
@@ -91,20 +87,16 @@ app.post('/api/produtos', async (req, res) => {
 app.put('/api/produtos/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { nome, descricao, preco_base, categoria_id, subcategoria, preco_pao_especial, preco_pao_baby, imagem_url, receita } = req.body;
+        const { nome, descricao, preco_base, categoria_id, imagem_url, receita } = req.body;
 
-        // Atualiza o produto
         const { error: produtoError } = await supabase
             .from('produtos')
-            .update({ nome, descricao, preco_base, categoria_id, subcategoria, preco_pao_especial, preco_pao_baby, imagem_url })
+            .update({ nome, descricao, preco_base, categoria_id, imagem_url })
             .eq('id', id);
         if (produtoError) throw produtoError;
 
-        // Apaga a receita antiga
-        const { error: deleteError } = await supabase.from('receitas').delete().eq('produto_id', id);
-        if (deleteError) throw deleteError;
+        await supabase.from('receitas').delete().eq('produto_id', id);
 
-        // Insere a nova receita, se houver
         if (receita && receita.length > 0) {
             const receitaParaInserir = receita.map(item => ({
                 produto_id: id,
@@ -125,8 +117,6 @@ app.put('/api/produtos/:id', async (req, res) => {
 app.delete('/api/produtos/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        // Se suas chaves estrangeiras estiverem configuradas com "ON DELETE CASCADE",
-        // apagar o produto automaticamente apagará a receita. Mas para garantir:
         await supabase.from('receitas').delete().eq('produto_id', id);
         const { error } = await supabase.from('produtos').delete().eq('id', id);
         if (error) throw error;
@@ -185,9 +175,6 @@ app.post('/api/categorias', async (req, res) => {
 });
 
 // --- ROTAS DE PEDIDOS ---
-// ATENÇÃO: A lógica de pedidos com controle de estoque é complexa.
-// O ideal para garantir 100% de consistência seria criar uma "Database Function" (RPC) no Supabase.
-// A conversão abaixo é uma aproximação que funcionará, mas não é uma "transação" atômica.
 app.get('/api/pedidos', async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -202,10 +189,33 @@ app.get('/api/pedidos', async (req, res) => {
     }
 });
 
-// A ROTA POST DE PEDIDOS É A MAIS COMPLEXA.
-// A conversão direta é difícil. Recomendo focar em fazer o resto funcionar primeiro.
-// Esta rota precisará ser reescrita com cuidado usando funções do Supabase (RPC) para garantir
-// que o estoque não seja deduzido incorretamente.
+// ROTA PARA CRIAR UM NOVO PEDIDO USANDO A FUNÇÃO RPC
+app.post('/api/pedidos', async (req, res) => {
+    try {
+        const dadosDoPedido = req.body;
+
+        const { data, error } = await supabase.rpc('processar_pedido', {
+            dados_pedido: dadosDoPedido
+        });
+
+        if (error) {
+            throw new Error(`Erro no RPC do banco de dados: ${error.message}`);
+        }
+
+        if (data.success) {
+            res.status(201).json({
+                message: 'Pedido criado com sucesso!',
+                pedidoId: data.pedidoId
+            });
+        } else {
+            res.status(400).json({ error: `Falha ao processar o pedido: ${data.message}` });
+        }
+
+    } catch (error) {
+        console.error('Erro na rota /api/pedidos:', error.message);
+        res.status(500).json({ error: 'Erro interno do servidor.' });
+    }
+});
 
 // --- ROTAS DE ESTOQUE (INGREDIENTES) ---
 app.get('/api/ingredientes', async (req, res) => {
