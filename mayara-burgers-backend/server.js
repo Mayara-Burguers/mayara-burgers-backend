@@ -41,7 +41,8 @@ app.get('/api/produtos', async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('produtos')
-            .select('*, categoria_nome:categorias(nome)') // Sintaxe de JOIN do Supabase
+           
+            .select('*, categorias(nome)')
             .order('id', { ascending: true }); // Ordenação simples
 
         if (error) throw error;
