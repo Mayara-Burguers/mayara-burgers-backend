@@ -202,11 +202,44 @@ app.get('/api/pedidos', async (req, res) => {
     }
 });
 
-// A ROTA POST DE PEDIDOS É A MAIS COMPLEXA.
-// A conversão direta é difícil. Recomendo focar em fazer o resto funcionar primeiro.
-// Esta rota precisará ser reescrita com cuidado usando funções do Supabase (RPC) para garantir
-// que o estoque não seja deduzido incorretamente.
+// --- ROTA DE PEDIDOS (usando a função RPC do banco de dados) ---
+app.post('/api/pedidos', async (req, res) => {
+    try {
+        // O corpo da requisição (req.body) já deve ser um objeto JSON
+        // com todos os dados do pedido, exatamente como o front-end envia.
+        const dadosDoPedido = req.body;
 
+        // Chama a função 'processar_pedido' que criamos no banco de dados
+        // e passa todos os dados do pedido como um único argumento.
+        const { data, error } = await supabase.rpc('processar_pedido', {
+            dados_pedido: dadosDoPedido
+        });
+
+        // Se a função do banco de dados retornar um erro (ex: estoque insuficiente),
+        // o erro será lançado e capturado pelo bloco catch.
+        if (error) {
+            throw new Error(`Erro no RPC do banco de dados: ${error.message}`);
+        }
+
+        // A função retorna um objeto JSON. Verificamos se a operação foi bem-sucedida.
+        if (data.success) {
+            // Se foi sucesso, retorna a mensagem e o ID do novo pedido.
+            res.status(201).json({
+                message: 'Pedido criado com sucesso!',
+                pedidoId: data.pedidoId
+            });
+        } else {
+            // Se a função retornou success: false, significa um erro de lógica (ex: estoque).
+            // Retornamos a mensagem de erro que a própria função gerou.
+            res.status(400).json({ error: `Falha ao processar o pedido: ${data.message}` });
+        }
+
+    } catch (error) {
+        // Captura erros gerais de conexão ou erros lançados.
+        console.error('Erro na rota /api/pedidos:', error.message);
+        res.status(500).json({ error: 'Erro interno do servidor.' });
+    }
+});
 // --- ROTAS DE ESTOQUE (INGREDIENTES) ---
 app.get('/api/ingredientes', async (req, res) => {
     try {
