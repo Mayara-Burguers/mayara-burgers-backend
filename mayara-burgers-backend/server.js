@@ -240,16 +240,21 @@ app.post('/api/pedidos', async (req, res) => {
         res.status(500).json({ error: 'Erro interno do servidor.' });
     }
 });
-// --- ROTAS DE ESTOQUE (INGREDIENTES) ---
-app.get('/api/ingredientes', async (req, res) => {
-    try {
-        const { data, error } = await supabase.from('ingredientes').select('*').order('nome');
-        if (error) throw error;
-        res.status(200).json(data);
-    } catch (error) { 
-        console.error("Erro ao buscar ingredientes:", error);
-        res.status(500).json({ error: 'Erro interno do servidor' }); 
-    }
+// --- ROTA PARA BUSCAR APENAS OS INGREDIENTES ADICIONAIS ---
+app.get('/api/adicionais', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('ingredientes')
+            .select('id, nome, unidade') // Selecionamos apenas os dados que o front-end precisa
+            .eq('pode_ser_adicional', true) // Filtramos apenas os que podem ser adicionais
+            .order('nome');
+
+        if (error) throw error;
+        res.status(200).json(data);
+    } catch (error) { 
+        console.error("Erro ao buscar adicionais:", error);
+        res.status(500).json({ error: 'Erro interno do servidor' }); 
+    }
 });
 
 app.put('/api/ingredientes/:id', async (req, res) => {
