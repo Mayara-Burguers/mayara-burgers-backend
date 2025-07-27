@@ -1,29 +1,22 @@
 /*
 ============================================================
-| JAVASCRIPT COMPLETO E CORRIGIDO - MAYARA BURGUER'S       |
-| CORREÇÃO: URL do backend atualizada para produção.       |
+| JAVASCRIPT FINAL E COMPLETO - MAYARA BURGUER'S           |
+| Adicionais carregados via API e lógica do modal corrigida.|
 ============================================================
 */
 document.addEventListener("DOMContentLoaded", async () => {
 
     // 1. ELEMENTOS E DADOS GLOBAIS
-    // IMPORTANTE: Cole a URL do seu backend do Render aqui!
-    const BASE_URL = 'https://mayara-backend-servidor.onrender.com'; // <--- TROQUE PELA SUA URL
+    const BASE_URL = 'https://mayara-backend-servidor.onrender.com';
 
     const menuContainer = document.getElementById('menu-container');
     const navContainer = document.getElementById('nav-categorias');
     const modalGenericoEl = document.getElementById('modalGenerico');
     const modalGenerico = new bootstrap.Modal(modalGenericoEl);
 
-    // Listas de Adicionais
-    const adicionaisLanches = [{ nome: 'Ovo', preco: 2.50 }, { nome: 'Alface', preco: 2.50 }, { nome: 'Milho', preco: 2.50 }, { nome: 'Cebola', preco: 2.50 }, { nome: 'Tomate', preco: 2.50 }, { nome: 'Cheddar', preco: 2.50 }, { nome: 'Batata Palha', preco: 3.00 }, { nome: 'Requeijão', preco: 3.00 }, { nome: 'Mussarela', preco: 3.00 }, { nome: 'Apresuntado', preco: 3.00 }, { nome: 'Carne Extra', preco: 3.00 }, { nome: 'Salsicha', preco: 5.00 }, { nome: 'Brócolis', preco: 5.00 }, { nome: 'Calabresa', preco: 6.00 }, { nome: 'Frango', preco: 6.00 }, { nome: 'Purê de Batata', preco: 6.00 }, { nome: 'Catupiry Original', preco: 6.00 }, { nome: 'Linguiça Toscana', preco: 6.00 }, { nome: 'Bacon', preco: 6.00 }];
-    const adicionaisPastel = [{ nome: 'Milho', preco: 2.50 }, { nome: 'Tomate', preco: 2.50 }, { nome: 'Requeijão', preco: 2.50 }, { nome: 'Cheddar', preco: 2.50 }, { nome: 'Vinagrete', preco: 2.50 }, { nome: 'Purê', preco: 6.00 }, { nome: 'Brócolis', preco: 6.00 }, { nome: 'Frango', preco: 6.00 }, { nome: 'Bacon', preco: 6.00 }, { nome: 'Queijo', preco: 6.00 }, { nome: 'Calabresa', preco: 6.00 }, { nome: 'Carne Moída', preco: 6.00 }, { nome: 'Catupiry Original', preco: 6.00 }, { nome: 'Palmito', preco: 6.00 }];
-    const adicionaisAcai = [{ nome: 'Amendoim', preco: 2.50 }, { nome: 'Coco ralado', preco: 2.50 }, { nome: 'Granola', preco: 2.50 }, { nome: 'Banana', preco: 2.50 }, { nome: 'Confete', preco: 2.50 }, { nome: 'Leite em pó', preco: 2.50 }, { nome: 'Bis', preco: 2.50 }, { nome: 'Doce de Leite', preco: 2.50 }, { nome: 'Leite Condensado', preco: 2.50 }, { nome: 'Canudinho', preco: 2.50 }, { nome: 'Farinha Lactea', preco: 2.50 }, { nome: 'Gotas de Chocolate', preco: 2.50 }, { nome: 'Ovomaltine', preco: 2.50 }, { nome: 'Paçoca', preco: 2.50 }, { nome: 'Sucrilhos', preco: 2.50 }, { nome: 'Morango', preco: 4.00 }, { nome: 'Uva', preco: 4.00 }, { nome: 'Kiwi', preco: 4.00 }, { nome: 'Sonho de valsa', preco: 4.00 }, { nome: 'Kit Kat', preco: 4.00 }, { nome: 'Leite Ninho', preco: 4.00 }, { nome: 'Brigadeiro de Colher', preco: 4.00 }, { nome: 'Ouro branco', preco: 4.00 }, { nome: 'Creme de Avelã', preco: 6.00 }, { nome: 'Nutella', preco: 8.00 }];
-    const adicionaisPorcao = [{ nome: 'Vinagrete', preco: 2.50 }];
-    const adicionaisBatata = [{ nome: 'Requeijão', preco: 2.50 }, { nome: 'Cheddar', preco: 2.50 }, { nome: 'Milho', preco: 2.50 }, { nome: 'Batata Palha', preco: 5.00 }, { nome: 'Apresuntado', preco: 5.00 }, { nome: 'Brócolis', preco: 5.00 }, { nome: 'Frango', preco: 6.00 }, { nome: 'Queijo', preco: 6.00 }, { nome: 'Bacon', preco: 6.00 }, { nome: 'Catupiry Original', preco: 6.00 }, { nome: 'Calabresa', preco: 6.00 }];
-    const adicionaisHotDog = [{ nome: 'Milho', preco: 2.50 }, { nome: 'Tomate', preco: 2.50 }, { nome: 'Batata Palha', preco: 3.00 }, { nome: 'Purê', preco: 6.00 }, { nome: 'Brócolis', preco: 6.00 }, { nome: 'Frango', preco: 6.00 }, { nome: 'Bacon', preco: 6.00 }, { nome: 'Requeijão', preco: 2.50 }, { nome: 'Cheddar', preco: 2.50 }, { nome: 'Queijo', preco: 6.00 }, { nome: 'Calabresa', preco: 6.00 }, { nome: 'Carne Moída', preco: 6.00 }, { nome: 'Catupiry Original', preco: 6.00 }];
-
+    // Variáveis globais para guardar os dados vindos do servidor
     let todosOsProdutos = [];
+    let listaDeAdicionais = []; // A lista agora virá da API
 
     // 2. DELEGAÇÃO DE EVENTOS
     menuContainer.addEventListener('click', (e) => {
@@ -62,23 +55,31 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    // 3. CARREGAMENTO DO MENU
-    async function carregarMenu() {
+    // 3. CARREGAMENTO DE DADOS
+    async function carregarDadosIniciais() {
         try {
-            const response = await fetch(`${BASE_URL}/api/produtos`);
-            if (!response.ok) throw new Error(`Erro de rede: ${response.statusText}`);
-            todosOsProdutos = await response.json();
+            const [responseProdutos, responseAdicionais] = await Promise.all([
+                fetch(`${BASE_URL}/api/produtos`),
+                fetch(`${BASE_URL}/api/adicionais`)
+            ]);
+
+            if (!responseProdutos.ok) throw new Error(`Erro ao buscar produtos: ${responseProdutos.statusText}`);
+            if (!responseAdicionais.ok) throw new Error(`Erro ao buscar adicionais: ${responseAdicionais.statusText}`);
+            
+            todosOsProdutos = await responseProdutos.json();
+            listaDeAdicionais = await responseAdicionais.json();
+
             renderizarMenu();
+
         } catch (error) {
-            console.error("Erro ao carregar o menu:", error);
-            menuContainer.innerHTML = `<p class='text-center text-danger'>FALHA AO CARREGAR O CARDÁPIO. Verifique a conexão e a URL do servidor. Detalhes: ${error.message}</p>`;
+            console.error("Erro ao carregar dados iniciais:", error);
+            menuContainer.innerHTML = `<p class='text-center text-danger'>FALHA AO CARREGAR O CARDÁPIO. Verifique a conexão. Detalhes: ${error.message}</p>`;
         }
     }
     
     function renderizarMenu() {
         const categorias = todosOsProdutos.reduce((acc, produto) => {
-            // Se a categoria existir, usa o nome dela. Se não, usa um texto padrão.
-const catNome = produto.categorias ? produto.categorias.nome : 'Sem Categoria';
+            const catNome = produto.categorias ? produto.categorias.nome : 'Sem Categoria';
             (acc[catNome] = acc[catNome] || []).push(produto);
             return acc;
         }, {});
@@ -86,8 +87,16 @@ const catNome = produto.categorias ? produto.categorias.nome : 'Sem Categoria';
         menuContainer.innerHTML = '';
         navContainer.innerHTML = '';
         
+        const chavesOrdenadas = Object.keys(categorias).sort((a, b) => {
+            const produtoA = categorias[a][0];
+            const produtoB = categorias[b][0];
+            const ordemA = produtoA.categorias ? produtoA.categorias.ordem : 99;
+            const ordemB = produtoB.categorias ? produtoB.categorias.ordem : 99;
+            return ordemA - ordemB;
+        });
+        
         let first = true;
-        for (const nomeCategoria in categorias) {
+        for (const nomeCategoria of chavesOrdenadas) {
             const slug = nomeCategoria.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             navContainer.innerHTML += `<a href="#${slug}" class="btn btn-orange ${first ? 'active' : ''}">${nomeCategoria}</a>`;
             
@@ -99,7 +108,7 @@ const catNome = produto.categorias ? produto.categorias.nome : 'Sem Categoria';
             let produtosHtml = `<h2 class="text-center mb-4">${nomeCategoria}</h2>`;
 
             if (nomeCategoria === 'Bebidas' || nomeCategoria === 'Pastéis') {
-                const subcategorias = categorias[nomeCategoria].reduce((acc, produto) => {
+                 const subcategorias = categorias[nomeCategoria].reduce((acc, produto) => {
                     const subcatNome = produto.subcategoria || 'Outros';
                     (acc[subcatNome] = acc[subcatNome] || []).push(produto);
                     return acc;
@@ -127,7 +136,9 @@ const catNome = produto.categorias ? produto.categorias.nome : 'Sem Categoria';
     }
 
     function criarCardProduto(produto) {
-        const buttonHtml = produto.categoria_nome === 'Bebidas'
+        const nomeCategoria = produto.categorias ? produto.categorias.nome : '';
+
+        const buttonHtml = nomeCategoria === 'Bebidas'
             ? `<button class="btn btn-sm btn-orange simple-add-btn" data-item='${JSON.stringify({ nome: produto.nome, preco: produto.preco_base })}'>Adicionar</button>`
             : `<button class="btn btn-sm btn-orange btn-personalize" data-product-id="${produto.id}"><i class="fas fa-utensils"></i> Personalizar</button>`;
         
@@ -135,46 +146,27 @@ const catNome = produto.categorias ? produto.categorias.nome : 'Sem Categoria';
     }
 
     // 4. LÓGICA DO MODAL
-    function contarAdicionais(modal) {
-        let total = 0;
-        modal.querySelectorAll('.adicional-quantidade').forEach(input => {
-            total += parseInt(input.value) || 0;
-        });
-        return total;
-    }
-
     function preencherEabrirModal(produto) {
         const modalBody = modalGenericoEl.querySelector('.modal-body');
         modalGenericoEl.querySelector('.nome-lanche').textContent = produto.nome;
         
-        let htmlPao = (produto.categoria_nome === 'Lanches')
+        const categoriaInfo = produto.categorias;
+        
+        let htmlPao = (categoriaInfo && (categoriaInfo.nome === 'Lanches' || categoriaInfo.nome === 'Hambúrgueres'))
             ? `<div class="option-group"><div class="option-title"><i class="fas fa-bread-slice"></i> Tipo de Pão</div><div class="form-check"><input class="form-check-input" type="radio" name="paoGenerico" id="paoPadrao" value="${produto.preco_base}" checked data-nome="Pão de Hambúrguer"><label class="form-check-label" for="paoPadrao">Pão de Hambúrguer (Padrão) - ${parseFloat(produto.preco_base).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</label></div>${produto.preco_pao_especial ? `<div class="form-check"><input class="form-check-input" type="radio" name="paoGenerico" id="paoFrances" value="${produto.preco_pao_especial}" data-nome="Pão Francês"><label class="form-check-label" for="paoFrances">Pão Francês - ${parseFloat(produto.preco_pao_especial).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</label></div><div class="form-check"><input class="form-check-input" type="radio" name="paoGenerico" id="paoEspecial" value="${produto.preco_pao_especial}" data-nome="Pão Especial"><label class="form-check-label" for="paoEspecial">Pão Especial - ${parseFloat(produto.preco_pao_especial).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</label></div>` : ''}${produto.preco_pao_baby ? `<div class="form-check"><input class="form-check-input" type="radio" name="paoGenerico" id="paoBaby" value="${produto.preco_pao_baby}" data-nome="Pão Baby"><label class="form-check-label" for="paoBaby">Pão Baby - ${parseFloat(produto.preco_pao_baby).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</label></div>` : ''}</div>`
             : '';
 
-        let listaAdicionais = [];
-        const categoria = produto.categoria_nome;
-        if (categoria === 'Lanches') listaAdicionais = adicionaisLanches;
-        else if (categoria === 'Hot Dog') listaAdicionais = adicionaisHotDog;
-        else if (categoria === 'Pastéis') {
-            listaAdicionais = (produto.subcategoria === 'Doces') ? adicionaisPastelDoce : adicionaisPastel;
-        }
-        else if (categoria === 'Açaí & Cupuaçu') listaAdicionais = adicionaisAcai;
-        else if (categoria === 'Porções') listaAdicionais = adicionaisPorcao;
-        else if (categoria === 'Batatas Recheadas') listaAdicionais = adicionaisBatata;
-
         let htmlAdicionais = '';
-        if (listaAdicionais.length > 0) {
+        if (categoriaInfo && categoriaInfo.permite_adicionais === true && listaDeAdicionais.length > 0) {
             htmlAdicionais = `<div class="option-group"><div class="option-title"><i class="fas fa-plus-circle"></i> Adicionais</div><p class="text-muted small mb-2">Limite de 10 adicionais no total.</p><div class="adicional-section">`;
-            listaAdicionais.forEach((ad, index) => {
-                htmlAdicionais += `<div class="adicional-item"><input type="checkbox" class="form-check-input adicional-checkbox" id="adicional-${index}"><label for="adicional-${index}" class="form-check-label">${ad.nome} <span class="price-change">+${ad.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></label><input type="number" class="form-control adicional-quantidade" min="0" value="0" data-nome="${ad.nome}" data-price="${ad.preco}" disabled></div>`;
+            listaDeAdicionais.forEach((adicional, index) => {
+                const precoAdicional = parseFloat(adicional.preco_adicional || 0);
+                htmlAdicionais += `<div class="adicional-item"><input type="checkbox" class="form-check-input adicional-checkbox" id="adicional-${produto.id}-${index}"><label for="adicional-${produto.id}-${index}" class="form-check-label">${adicional.nome} <span class="price-change">+${precoAdicional.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></label><input type="number" class="form-control adicional-quantidade" min="0" value="0" data-nome="${adicional.nome}" data-price="${precoAdicional}" disabled></div>`;
             });
             htmlAdicionais += `</div></div>`;
         }
         
-        let htmlObservacoes = '';
-        if (produto.categoria_nome !== 'Porções' && produto.categoria_nome !== 'Açaí & Cupuaçu') {
-            htmlObservacoes = `<div class="option-group"><div class="option-title"><i class="fas fa-edit"></i> Observações</div><textarea class="observacoes-textarea form-control" placeholder="Ex: Sem cebola..."></textarea></div>`;
-        }
+        let htmlObservacoes = `<div class="option-group"><div class="option-title"><i class="fas fa-edit"></i> Observações</div><textarea class="observacoes-textarea form-control" placeholder="Ex: Sem cebola..."></textarea></div>`;
         
         modalBody.innerHTML = htmlPao + htmlAdicionais + htmlObservacoes + `<div class="current-price">Total: R$ <span class="preco-final">0,00</span></div>`;
         
@@ -186,6 +178,14 @@ const catNome = produto.categorias ? produto.categorias.nome : 'Sem Categoria';
         modalGenerico.show();
     }
     
+    function contarAdicionais(modal) {
+        let total = 0;
+        modal.querySelectorAll('.adicional-quantidade').forEach(input => {
+            total += parseInt(input.value) || 0;
+        });
+        return total;
+    }
+
     modalGenericoEl.addEventListener('change', e => {
         if (e.target.matches('.adicional-checkbox, input[name="paoGenerico"]')) {
             if (e.target.matches('.adicional-checkbox')) {
@@ -299,6 +299,7 @@ const catNome = produto.categorias ? produto.categorias.nome : 'Sem Categoria';
     // 6. GESTÃO DE CLIENTE E FINALIZAÇÃO
     (function setupFinalizacao() {
         const modalClienteEl = document.getElementById("modalDadosCliente");
+        if (!modalClienteEl) return; // Sai se o modal de cliente não existir
         const modalCliente = new bootstrap.Modal(modalClienteEl);
         const deliveryRadio = document.getElementById("entregaDelivery");
         const retiradaRadio = document.getElementById("entregaRetirada");
@@ -345,7 +346,7 @@ const catNome = produto.categorias ? produto.categorias.nome : 'Sem Categoria';
             return true;
         }
         
-        document.getElementById("btnSalvarCliente").addEventListener("click", () => {
+        document.getElementById("btnSalvarCliente")?.addEventListener("click", () => {
             const nome = document.getElementById("inputNomeCliente").value.trim();
             const telefone = document.getElementById("inputTelefoneCliente").value.trim();
             const endereco = document.getElementById("inputEnderecoCliente").value.trim();
@@ -428,11 +429,7 @@ const catNome = produto.categorias ? produto.categorias.nome : 'Sem Categoria';
                 
                 window.open("https://wa.me/5512992050080?text=" + mensagemWhats, '_blank');
                 
-                localStorage.removeItem("cart");
-                localStorage.removeItem("sachesAlho");
-                localStorage.removeItem("molhoKetchup");
-                localStorage.removeItem("molhoMostarda");
-                localStorage.removeItem("molhoMaionese");
+                localStorage.clear(); // Limpa tudo relacionado ao pedido
                 if(incluirMolhosCheckbox) incluirMolhosCheckbox.checked = false;
                 if(opcoesMolhosIndividuais) opcoesMolhosIndividuais.style.display = 'none';
                 document.querySelectorAll('#opcoesMolhosIndividuais input').forEach(c => c.checked = false);
@@ -463,6 +460,6 @@ const catNome = produto.categorias ? produto.categorias.nome : 'Sem Categoria';
     })();
     
     // 7. INICIALIZAÇÃO DA PÁGINA
-    await carregarMenu();
+    carregarDadosIniciais();
     renderizarCarrinho();
 });
