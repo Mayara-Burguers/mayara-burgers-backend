@@ -81,123 +81,295 @@
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // URL base do seu servidor backend. Altere se necessário.
-            const BASE_URL = 'https://mayara-backend-servidor.onrender.com';
-            
-            // Mapeamento dos elementos HTML que serão manipulados
-            const pedidosContainer = document.getElementById('pedidos-container');
-            const btnRecarregar = document.getElementById('btn-recarregar');
-
-            /**
-             * Função principal para buscar e renderizar os pedidos.
-             * Inclui tratamento robusto de erros de rede e de servidor.
-             */
-            async function carregarPedidos() {
-                pedidosContainer.innerHTML = '<p class="text-center">Buscando novos pedidos...</p>';
-
-                try {
-                    const response = await fetch(`${BASE_URL}/api/pedidos`);
-
-                    // VERIFICAÇÃO ESSENCIAL: Checa se a resposta da requisição foi bem-sucedida (status entre 200 e 299).
-                    if (!response.ok) {
-                        // Se a resposta for um erro (como 429 ou 500), lança um novo erro para ser capturado pelo bloco 'catch'.
-                        throw new Error(`Erro do servidor: ${response.status} - ${response.statusText}`);
-                    }
-
-                    // Tenta converter o corpo da resposta para o formato JSON.
-                    const pedidos = await response.json();
-                    
-                    // Se a conversão for bem-sucedida, chama a função para renderizar os dados na tela.
-                    renderizarPedidos(pedidos);
-
-                } catch (error) {
-                    console.error("Falha ao buscar ou processar os pedidos:", error);
-                    
-                    // Em caso de qualquer erro na busca ou processamento, exibe uma mensagem amigável na tela.
-                    pedidosContainer.innerHTML = `
-                        <div class="alert alert-danger text-center">
-                            <strong>Ops! Falha ao carregar os pedidos.</strong>
-                            <p>Pode ser um problema de conexão ou o servidor está ocupado. Tente recarregar.</p>
-                            <p class="small mb-0">Detalhe do erro: ${error.message}</p>
-                        </div>`;
-                }
+document.addEventListener('DOMContentLoaded', () => {
+    const BASE_URL = 'https://mayara-backend-servidor.onrender.com';
+    const modalProduto = new bootstrap.Modal(document.getElementById('modalProduto'));
+    
+    // Mapeamento de containers
+    const containers = {
+        pedidos: document.getElementById('pedidos-container'),
+        produtos: document.getElementById('produtos-container'),
+        categorias: document.getElementById('categorias-container'),
+        ingredientes: document.getElementById('ingredientes-container')
+    };
+    
+    // --- FUNÇÕES DE API GENÉRICAS ---
+    async function apiRequest(endpoint, method = 'GET', body = null) {
+        const options = {
+            method,
+            headers: {
+                'Content-Type': 'application/json'
             }
+        };
+        if (body) {
+            options.body = JSON.stringify(body);
+        }
 
-            /**
-             * Função responsável por receber uma lista (array) de objetos de pedido e transformá-la em elementos HTML.
-             * @param {Array} pedidos - A lista de pedidos que foi recebida da API.
-             */
-            function renderizarPedidos(pedidos) {
-                // Primeiro, limpa qualquer conteúdo existente no container.
-                pedidosContainer.innerHTML = '';
-
-                // Se a lista de pedidos não existir ou estiver vazia, exibe uma mensagem informativa.
-                if (!pedidos || pedidos.length === 0) {
-                    pedidosContainer.innerHTML = '<p class="text-center text-muted">Nenhum pedido encontrado no histórico.</p>';
-                    return; // Encerra a execução da função, pois não há nada a renderizar.
-                }
-
-                // Utiliza o método 'forEach' para iterar sobre cada objeto 'pedido' dentro da lista 'pedidos'.
-                pedidos.forEach(pedido => {
-                    // Formata a data e hora para o padrão brasileiro (dd/mm/aaaa, hh:mm:ss).
-                    const dataHora = new Date(pedido.data_hora).toLocaleString('pt-BR');
-
-                    // Formata o valor total para a moeda brasileira (Reais - BRL).
-                    const valorTotal = parseFloat(pedido.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-                    let itensHtml = '';
-                    // Verifica se o pedido possui a lista de itens e se ela não está vazia.
-                    if (pedido.itens_do_pedido && pedido.itens_do_pedido.length > 0) {
-                        pedido.itens_do_pedido.forEach(item => {
-                            // Constrói a string HTML para cada item do pedido.
-                            itensHtml += `
-                                <li>
-                                    <strong>${item.quantidade}x ${item.nome_produto}</strong>
-                                    <div class="item-detalhes">
-                                        ${item.observacoes ? `<div><em>Obs: ${item.observacoes}</em></div>` : ''}
-                                    </div>
-                                </li>`;
-                        });
-                    } else {
-                        itensHtml = '<li>Nenhum item detalhado foi registrado para este pedido.</li>';
-                    }
-
-                    // Cria um novo elemento 'div' que representará o card do pedido.
-                    const pedidoCard = document.createElement('div');
-                    pedidoCard.className = 'pedido'; // Adiciona a classe CSS para estilização.
-                    
-                    // Define o conteúdo HTML interno do card do pedido, usando os dados formatados.
-                    pedidoCard.innerHTML = `
-                        <div class="pedido-header d-flex justify-content-between">
-                            <span>Pedido #${pedido.id}</span>
-                            <span>${dataHora}</span>
-                        </div>
-                        <div class="pedido-body">
-                            <p><strong>Cliente:</strong> ${pedido.cliente_nome}</p>
-                            <p><strong>Telefone:</strong> ${pedido.cliente_telefone}</p>
-                            <p><strong>Entrega:</strong> ${pedido.tipo_entrega === 'delivery' ? `Delivery - ${pedido.cliente_endereco}` : 'Retirada no Local'}</p>
-                            <h6>Itens:</h6>
-                            <ul>
-                                ${itensHtml}
-                            </ul>
-                        </div>
-                        <div class="pedido-footer">
-                            <span>Total: ${valorTotal}</span>
-                        </div>
-                    `;
-                    
-                    // Adiciona o card recém-criado como um filho do container principal na página.
-                    pedidosContainer.appendChild(pedidoCard);
-                });
+        try {
+            const response = await fetch(`${BASE_URL}${endpoint}`, options);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Erro na rede: ${response.statusText}`);
             }
+            if (response.status === 204) { // No Content, para DELETE
+                return null;
+            }
+            return await response.json();
+        } catch (error) {
+            console.error(`Falha na requisição para ${endpoint}:`, error);
+            alert(`Erro: ${error.message}`);
+            return null;
+        }
+    }
+    
+    // --- LÓGICA DE PEDIDOS ---
+    async function carregarPedidos() {
+        containers.pedidos.innerHTML = '<p>Carregando histórico de pedidos...</p>';
+        const pedidos = await apiRequest('/api/pedidos');
+        if (!pedidos) {
+            containers.pedidos.innerHTML = '<p class="text-danger">Não foi possível carregar os pedidos.</p>';
+            return;
+        }
+        if (pedidos.length === 0) {
+            containers.pedidos.innerHTML = '<p class="text-muted">Nenhum pedido encontrado.</p>';
+            return;
+        }
+        
+        containers.pedidos.innerHTML = '';
+        pedidos.forEach(pedido => {
+            const dataHora = new Date(pedido.data_hora).toLocaleString('pt-BR');
+            const valorTotal = parseFloat(pedido.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            let itensHtml = (pedido.itens_do_pedido && pedido.itens_do_pedido.length > 0)
+                ? `<ul>${pedido.itens_do_pedido.map(item => `<li>${item.quantidade}x ${item.nome_produto} ${item.observacoes ? `<em>(${item.observacoes})</em>` : ''}</li>`).join('')}</ul>`
+                : '<p class="small text-muted">Sem detalhes de itens.</p>';
 
-            // Adiciona um "ouvinte" de eventos para o clique no botão de recarregar.
-            btnRecarregar.addEventListener('click', carregarPedidos);
-
-            // Chama a função para carregar os pedidos pela primeira vez, assim que a página é aberta.
-            carregarPedidos();
+            const card = document.createElement('div');
+            card.className = 'card mb-3';
+            card.innerHTML = `
+                <div class="card-header d-flex justify-content-between">
+                    <strong>Pedido #${pedido.id}</strong>
+                    <span class="text-muted">${dataHora}</span>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Cliente:</strong> ${pedido.cliente_nome}</p>
+                    <p class="mb-1"><strong>Endereço:</strong> ${pedido.tipo_entrega === 'delivery' ? pedido.cliente_endereco : 'Retirada no Balcão'}</p>
+                    <hr>
+                    <h6>Itens:</h6>
+                    ${itensHtml}
+                </div>
+                <div class="card-footer text-end">
+                    <strong>Total: ${valorTotal}</strong>
+                </div>
+            `;
+            containers.pedidos.appendChild(card);
         });
-    </script>
+    }
+    
+    // --- LÓGICA DE PRODUTOS ---
+    async function carregarProdutos() {
+        containers.produtos.innerHTML = '<p>Carregando produtos...</p>';
+        const produtos = await apiRequest('/api/produtos');
+         if (!produtos) {
+            containers.produtos.innerHTML = '<p class="text-danger">Não foi possível carregar os produtos.</p>';
+            return;
+        }
+        const table = document.createElement('table');
+        table.className = 'table table-hover align-middle';
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Categoria</th>
+                    <th>Preço Base</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${produtos.map(p => `
+                    <tr data-produto='${JSON.stringify(p)}'>
+                        <td>${p.nome}</td>
+                        <td>${p.categorias.nome}</td>
+                        <td>${parseFloat(p.preco_base).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-primary btn-acao btn-editar-produto"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger btn-acao btn-excluir-produto" data-id="${p.id}"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        `;
+        containers.produtos.innerHTML = '';
+        containers.produtos.appendChild(table);
+    }
+    
+    // --- LÓGICA DE CATEGORIAS ---
+    async function carregarCategorias() {
+        containers.categorias.innerHTML = '<p>Carregando categorias...</p>';
+        const categorias = await apiRequest('/api/categorias');
+         if (!categorias) {
+            containers.categorias.innerHTML = '<p class="text-danger">Não foi possível carregar as categorias.</p>';
+            return;
+        }
+        const table = document.createElement('table');
+        table.className = 'table table-hover';
+        table.innerHTML = `
+            <thead><tr><th>ID</th><th>Nome</th><th>Ordem de Exibição</th></tr></thead>
+            <tbody>
+                ${categorias.map(c => `<tr><td>${c.id}</td><td>${c.nome}</td><td>${c.ordem}</td></tr>`).join('')}
+            </tbody>
+        `;
+        containers.categorias.innerHTML = '';
+        containers.categorias.appendChild(table);
+    }
+
+    // --- LÓGICA DE INGREDIENTES / ESTOQUE ---
+    async function carregarIngredientes() {
+        containers.ingredientes.innerHTML = '<p>Carregando ingredientes...</p>';
+        const ingredientes = await apiRequest('/api/ingredientes');
+        if (!ingredientes) {
+            containers.ingredientes.innerHTML = '<p class="text-danger">Não foi possível carregar os ingredientes.</p>';
+            return;
+        }
+        const table = document.createElement('table');
+        table.className = 'table table-hover';
+        table.innerHTML = `
+            <thead><tr><th>Nome</th><th>Unidade</th><th>Estoque</th><th>É Adicional?</th><th>Preço Adicional</th></tr></thead>
+            <tbody>
+                ${ingredientes.map(i => `
+                    <tr>
+                        <td>${i.nome}</td>
+                        <td>${i.unidade || 'N/A'}</td>
+                        <td>${i.quantidade_estoque}</td>
+                        <td>${i.pode_ser_adicional ? '<span class="badge bg-success">Sim</span>' : '<span class="badge bg-secondary">Não</span>'}</td>
+                        <td>${i.pode_ser_adicional ? parseFloat(i.preco_adicional).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        `;
+        containers.ingredientes.innerHTML = '';
+        containers.ingredientes.appendChild(table);
+    }
+    
+    // --- MANIPULAÇÃO DO MODAL DE PRODUTO ---
+    async function abrirModalProduto(produto = null) {
+        document.getElementById('form-produto').reset();
+        const selectCategoria = document.getElementById('produto-categoria');
+        selectCategoria.innerHTML = '<option>Carregando...</option>';
+        const categorias = await apiRequest('/api/categorias');
+        if (categorias) {
+            selectCategoria.innerHTML = categorias.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+        }
+
+        if (produto) { // Modo Edição
+            document.getElementById('modalProdutoTitle').textContent = 'Editar Produto';
+            document.getElementById('produto-id').value = produto.id;
+            document.getElementById('produto-nome').value = produto.nome;
+            document.getElementById('produto-descricao').value = produto.descricao;
+            document.getElementById('produto-preco').value = produto.preco_base;
+            document.getElementById('produto-categoria').value = produto.categoria_id;
+            document.getElementById('produto-imagem').value = produto.imagem_url;
+        } else { // Modo Adição
+            document.getElementById('modalProdutoTitle').textContent = 'Adicionar Produto';
+            document.getElementById('produto-id').value = '';
+        }
+        modalProduto.show();
+    }
+    
+    // --- EVENTOS DE CRUD (Criar, Ler, Atualizar, Apagar) ---
+    
+    // SUBMISSÃO DO FORMULÁRIO DE PRODUTO (CRIAR/ATUALIZAR)
+    document.getElementById('form-produto').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('produto-id').value;
+        const produto = {
+            nome: document.getElementById('produto-nome').value,
+            descricao: document.getElementById('produto-descricao').value,
+            preco_base: parseFloat(document.getElementById('produto-preco').value),
+            categoria_id: parseInt(document.getElementById('produto-categoria').value),
+            imagem_url: document.getElementById('produto-imagem').value,
+        };
+        
+        let resultado;
+        if (id) { // Atualizar (PUT)
+            resultado = await apiRequest(`/api/produtos/${id}`, 'PUT', produto);
+        } else { // Criar (POST)
+            resultado = await apiRequest('/api/produtos', 'POST', produto);
+        }
+
+        if (resultado) {
+            modalProduto.hide();
+            carregarProdutos(); // Recarrega a lista
+        }
+    });
+
+    // ADICIONAR CATEGORIA
+    document.getElementById('btn-adicionar-categoria').addEventListener('click', async () => {
+        const nome = prompt("Digite o nome da nova categoria:");
+        if (!nome) return;
+        const ordem = prompt("Digite a ordem de exibição (número):", "10");
+        if (!ordem) return;
+
+        const resultado = await apiRequest('/api/categorias', 'POST', { nome, ordem: parseInt(ordem) });
+        if (resultado) {
+            carregarCategorias();
+        }
+    });
+
+    // ADICIONAR INGREDIENTE
+    document.getElementById('btn-adicionar-ingrediente').addEventListener('click', async () => {
+        const nome = prompt("Digite o nome do novo ingrediente:");
+        if (!nome) return;
+        const unidade = prompt("Digite a unidade de medida (ex: 'g', 'un', 'fatia'):", "un");
+        if (!unidade) return;
+        const quantidade_estoque = prompt("Digite a quantidade inicial em estoque:", "0");
+
+        const resultado = await apiRequest('/api/ingredientes', 'POST', { nome, unidade, quantidade_estoque: parseInt(quantidade_estoque) });
+        if (resultado) {
+            carregarIngredientes();
+        }
+    });
+
+    // DELEGAÇÃO DE EVENTOS para botões de editar/excluir
+    document.body.addEventListener('click', async (e) => {
+        const btnEditar = e.target.closest('.btn-editar-produto');
+        const btnExcluir = e.target.closest('.btn-excluir-produto');
+        
+        // ABRIR MODAL PARA EDITAR PRODUTO
+        if (btnEditar) {
+            const tr = btnEditar.closest('tr');
+            const produto = JSON.parse(tr.dataset.produto);
+            abrirModalProduto(produto);
+        }
+
+        // EXCLUIR PRODUTO
+        if (btnExcluir) {
+            const id = btnExcluir.dataset.id;
+            const nome = btnExcluir.closest('tr').cells[0].textContent;
+            if (confirm(`Tem certeza que deseja excluir o produto "${nome}"?`)) {
+                const resultado = await apiRequest(`/api/produtos/${id}`, 'DELETE');
+                // Mesmo que o resultado seja null (em caso de sucesso), a condição é implícita
+                // Se a requisição não falhar (não lançar erro), recarrega a lista
+                carregarProdutos();
+            }
+        }
+    });
+
+    // --- INICIALIZAÇÃO E EVENTOS DE ABAS ---
+    
+    // Carrega a aba ativa na primeira vez
+    carregarPedidos();
+    document.getElementById('btn-adicionar-produto').addEventListener('click', () => abrirModalProduto());
+    
+    // Eventos para carregar dados ao trocar de aba
+    document.getElementById('pedidos-tab').addEventListener('shown.bs.tab', carregarPedidos);
+    document.getElementById('produtos-tab').addEventListener('shown.bs.tab', carregarProdutos);
+    document.getElementById('categorias-tab').addEventListener('shown.bs.tab', carregarCategorias);
+    document.getElementById('ingredientes-tab').addEventListener('shown.bs.tab', carregarIngredientes);
+
+    // Evento de recarregar pedidos
+    document.getElementById('btn-recarregar-pedidos').addEventListener('click', carregarPedidos);
+});
+</script>
     </body>
 </html>
+
