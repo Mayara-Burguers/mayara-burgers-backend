@@ -138,8 +138,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     function criarCardProduto(produto) {
         const nomeCategoria = produto.categorias ? produto.categorias.nome : '';
 
-        const buttonHtml = nomeCategoria === 'Bebidas'
-            ? `<button class="btn btn-sm btn-orange simple-add-btn" data-item='${JSON.stringify({ nome: produto.nome, preco: produto.preco_base })}'>Adicionar</button>`
+       const buttonHtml = nomeCategoria === 'Bebidas'
+    ? `<button class="btn btn-sm btn-orange simple-add-btn" data-item='${JSON.stringify({ id: produto.id, nome: produto.nome, preco: produto.preco_base })}'>Adicionar</button>`
             : `<button class="btn btn-sm btn-orange btn-personalize" data-product-id="${produto.id}"><i class="fas fa-utensils"></i> Personalizar</button>`;
         
         return `<div class="col-md-6 col-lg-4"><div class="card item h-100"><img src="${produto.imagem_url || 'placeholder.jpg'}" class="card-img-top" alt="${produto.nome}"><div class="card-body d-flex flex-column"><h3 class="card-title">${produto.nome}</h3><p class="card-text">${produto.descricao || ''}</p><div class="d-flex justify-content-between align-items-center mt-auto"><span class="price">${parseFloat(produto.preco_base).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>${buttonHtml}</div></div></div></div>`;
@@ -463,3 +463,4 @@ document.addEventListener("DOMContentLoaded", async () => {
     carregarDadosIniciais();
     renderizarCarrinho();
 });
+
