@@ -13,6 +13,7 @@
         .nav-tabs .nav-link.active { color: #000; font-weight: bold; border-color: #dee2e6 #dee2e6 #fff; }
         .tab-content { background-color: #fff; padding: 2rem; border: 1px solid #dee2e6; border-top: 0; }
         .btn-acao { width: 38px; height: 38px; }
+        .form-check-input { width: 1.5em; height: 1.5em; }
     </style>
 </head>
 <body>
@@ -24,109 +25,49 @@
     <main class="container my-4">
         <ul class="nav nav-tabs" id="adminTab" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="pedidos-tab" data-bs-toggle="tab" data-bs-target="#pedidos-pane" type="button" role="tab">
-                    <i class="fas fa-receipt"></i> Pedidos
-                </button>
+                <button class="nav-link active" id="pedidos-tab" data-bs-toggle="tab" data-bs-target="#pedidos-pane" type="button" role="tab"><i class="fas fa-receipt"></i> Pedidos</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="produtos-tab" data-bs-toggle="tab" data-bs-target="#produtos-pane" type="button" role="tab">
-                    <i class="fas fa-hamburger"></i> Produtos
-                </button>
+                <button class="nav-link" id="produtos-tab" data-bs-toggle="tab" data-bs-target="#produtos-pane" type="button" role="tab"><i class="fas fa-hamburger"></i> Produtos</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="categorias-tab" data-bs-toggle="tab" data-bs-target="#categorias-pane" type="button" role="tab">
-                    <i class="fas fa-tags"></i> Categorias
-                </button>
+                <button class="nav-link" id="categorias-tab" data-bs-toggle="tab" data-bs-target="#categorias-pane" type="button" role="tab"><i class="fas fa-tags"></i> Categorias</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="ingredientes-tab" data-bs-toggle="tab" data-bs-target="#ingredientes-pane" type="button" role="tab">
-                    <i class="fas fa-carrot"></i> Ingredientes/Estoque
-                </button>
+                <button class="nav-link" id="ingredientes-tab" data-bs-toggle="tab" data-bs-target="#ingredientes-pane" type="button" role="tab"><i class="fas fa-carrot"></i> Ingredientes/Estoque</button>
             </li>
         </ul>
 
         <div class="tab-content" id="adminTabContent">
             <div class="tab-pane fade show active" id="pedidos-pane" role="tabpanel">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="h4">Histórico de Pedidos</h2>
-                    <button id="btn-recarregar-pedidos" class="btn btn-sm btn-outline-primary"><i class="fas fa-sync-alt"></i> Recarregar</button>
-                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h4">Histórico de Pedidos</h2><button id="btn-recarregar-pedidos" class="btn btn-sm btn-outline-primary"><i class="fas fa-sync-alt"></i> Recarregar</button></div>
                 <div id="pedidos-container"></div>
             </div>
-
             <div class="tab-pane fade" id="produtos-pane" role="tabpanel">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="h4">Gerenciar Produtos</h2>
-                    <button id="btn-adicionar-produto" class="btn btn-success"><i class="fas fa-plus"></i> Adicionar Produto</button>
-                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h4">Gerenciar Produtos</h2><button id="btn-adicionar-produto" class="btn btn-success"><i class="fas fa-plus"></i> Adicionar Produto</button></div>
                 <div id="produtos-container" class="table-responsive"></div>
             </div>
-
             <div class="tab-pane fade" id="categorias-pane" role="tabpanel">
-                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="h4">Gerenciar Categorias</h2>
-                    <button id="btn-adicionar-categoria" class="btn btn-success"><i class="fas fa-plus"></i> Adicionar Categoria</button>
-                </div>
+                 <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h4">Gerenciar Categorias</h2><button id="btn-adicionar-categoria" class="btn btn-success"><i class="fas fa-plus"></i> Adicionar Categoria</button></div>
                 <div id="categorias-container" class="table-responsive"></div>
             </div>
-
             <div class="tab-pane fade" id="ingredientes-pane" role="tabpanel">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="h4">Gerenciar Ingredientes e Estoque</h2>
-                    <button id="btn-adicionar-ingrediente" class="btn btn-success"><i class="fas fa-plus"></i> Adicionar Ingrediente</button>
-                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h4">Gerenciar Ingredientes e Estoque</h2><button id="btn-adicionar-ingrediente" class="btn btn-success"><i class="fas fa-plus"></i> Adicionar Ingrediente</button></div>
                 <div id="ingredientes-container" class="table-responsive"></div>
             </div>
         </div>
     </main>
     
-    <div class="modal fade" id="modalProduto" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="form-produto">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalProdutoTitle">Adicionar Produto</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="produto-id">
-                        <div class="mb-3">
-                            <label for="produto-nome" class="form-label">Nome do Produto</label>
-                            <input type="text" class="form-control" id="produto-nome" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="produto-descricao" class="form-label">Descrição</label>
-                            <textarea class="form-control" id="produto-descricao"></textarea>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="produto-preco" class="form-label">Preço Base (R$)</label>
-                                <input type="number" step="0.01" class="form-control" id="produto-preco" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="produto-categoria" class="form-label">Categoria</label>
-                                <select class="form-select" id="produto-categoria" required></select>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="produto-imagem" class="form-label">URL da Imagem</label>
-                            <input type="url" class="form-control" id="produto-imagem">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <div class="modal fade" id="modalProduto" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><form id="form-produto"><div class="modal-header"><h5 class="modal-title" id="modalProdutoTitle">Adicionar Produto</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="produto-id"><div class="mb-3"><label for="produto-nome" class="form-label">Nome</label><input type="text" class="form-control" id="produto-nome" required></div><div class="mb-3"><label for="produto-descricao" class="form-label">Descrição</label><textarea class="form-control" id="produto-descricao"></textarea></div><div class="row"><div class="col-md-6 mb-3"><label for="produto-preco" class="form-label">Preço Base (R$)</label><input type="number" step="0.01" class="form-control" id="produto-preco" required></div><div class="col-md-6 mb-3"><label for="produto-categoria" class="form-label">Categoria</label><select class="form-select" id="produto-categoria" required></select></div></div><div class="mb-3"><label for="produto-imagem" class="form-label">URL da Imagem</label><input type="url" class="form-control" id="produto-imagem"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div></form></div></div></div>
     
+    <div class="modal fade" id="modalIngrediente" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><form id="form-ingrediente"><div class="modal-header"><h5 class="modal-title" id="modalIngredienteTitle">Adicionar Ingrediente</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="ingrediente-id"><div class="mb-3"><label for="ingrediente-nome" class="form-label">Nome</label><input type="text" class="form-control" id="ingrediente-nome" required></div><div class="row"><div class="col-md-6 mb-3"><label for="ingrediente-unidade" class="form-label">Unidade de Medida</label><input type="text" class="form-control" id="ingrediente-unidade" placeholder="Ex: g, un, fatia"></div><div class="col-md-6 mb-3"><label for="ingrediente-estoque" class="form-label">Qtd. em Estoque</label><input type="number" step="1" class="form-control" id="ingrediente-estoque" required></div></div><hr><div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" role="switch" id="ingrediente-pode-adicional"><label class="form-check-label" for="ingrediente-pode-adicional">Pode ser vendido como Adicional?</label></div><div id="campos-adicional" style="display:none;"><div class="row"><div class="col-md-6 mb-3"><label for="ingrediente-preco-adicional" class="form-label">Preço do Adicional (R$)</label><input type="number" step="0.01" class="form-control" id="ingrediente-preco-adicional"></div><div class="col-md-6 mb-3"><label for="ingrediente-desconto-uso" class="form-label">Desconto do Estoque</label><input type="number" step="1" class="form-control" id="ingrediente-desconto-uso" placeholder="Qtd. por escolha"><small class="form-text text-muted">Quanto abater do estoque a cada vez que for pedido.</small></div></div></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div></form></div></div></div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const BASE_URL = 'https://mayara-backend-servidor.onrender.com';
         const modalProduto = new bootstrap.Modal(document.getElementById('modalProduto'));
+        const modalIngrediente = new bootstrap.Modal(document.getElementById('modalIngrediente'));
         
         const containers = {
             pedidos: document.getElementById('pedidos-container'),
@@ -136,14 +77,8 @@
         };
         
         async function apiRequest(endpoint, method = 'GET', body = null) {
-            const options = {
-                method,
-                headers: { 'Content-Type': 'application/json' }
-            };
-            if (body) {
-                options.body = JSON.stringify(body);
-            }
-
+            const options = { method, headers: { 'Content-Type': 'application/json' } };
+            if (body) options.body = JSON.stringify(body);
             try {
                 const response = await fetch(`${BASE_URL}${endpoint}`, options);
                 if (!response.ok) {
@@ -162,41 +97,16 @@
         async function carregarPedidos() {
             containers.pedidos.innerHTML = '<p>Carregando histórico de pedidos...</p>';
             const pedidos = await apiRequest('/api/pedidos');
-            if (!pedidos) {
-                containers.pedidos.innerHTML = '<p class="text-danger">Não foi possível carregar os pedidos.</p>';
-                return;
-            }
-            if (pedidos.length === 0) {
-                containers.pedidos.innerHTML = '<p class="text-muted">Nenhum pedido encontrado.</p>';
-                return;
-            }
-            
+            if (!pedidos) { containers.pedidos.innerHTML = '<p class="text-danger">Não foi possível carregar os pedidos.</p>'; return; }
+            if (pedidos.length === 0) { containers.pedidos.innerHTML = '<p class="text-muted">Nenhum pedido encontrado.</p>'; return; }
             containers.pedidos.innerHTML = '';
             pedidos.forEach(pedido => {
                 const dataHora = new Date(pedido.data_hora).toLocaleString('pt-BR');
                 const valorTotal = parseFloat(pedido.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                let itensHtml = (pedido.itens_do_pedido && pedido.itens_do_pedido.length > 0)
-                    ? `<ul>${pedido.itens_do_pedido.map(item => `<li>${item.quantidade}x ${item.nome_produto} ${item.observacoes ? `<em>(${item.observacoes})</em>` : ''}</li>`).join('')}</ul>`
-                    : '<p class="small text-muted">Sem detalhes de itens.</p>';
-
+                let itensHtml = (pedido.itens_do_pedido && pedido.itens_do_pedido.length > 0) ? `<ul>${pedido.itens_do_pedido.map(item => `<li>${item.quantidade}x ${item.nome_produto} ${item.observacoes ? `<em>(${item.observacoes})</em>` : ''}</li>`).join('')}</ul>` : '<p class="small text-muted">Sem detalhes de itens.</p>';
                 const card = document.createElement('div');
                 card.className = 'card mb-3';
-                card.innerHTML = `
-                    <div class="card-header d-flex justify-content-between">
-                        <strong>Pedido #${pedido.id}</strong>
-                        <span class="text-muted">${dataHora}</span>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-1"><strong>Cliente:</strong> ${pedido.cliente_nome}</p>
-                        <p class="mb-1"><strong>Endereço:</strong> ${pedido.tipo_entrega === 'delivery' ? pedido.cliente_endereco : 'Retirada no Balcão'}</p>
-                        <hr>
-                        <h6>Itens:</h6>
-                        ${itensHtml}
-                    </div>
-                    <div class="card-footer text-end">
-                        <strong>Total: ${valorTotal}</strong>
-                    </div>
-                `;
+                card.innerHTML = `<div class="card-header d-flex justify-content-between"><strong>Pedido #${pedido.id}</strong><span class="text-muted">${dataHora}</span></div><div class="card-body"><p class="mb-1"><strong>Cliente:</strong> ${pedido.cliente_nome}</p><p class="mb-1"><strong>Endereço:</strong> ${pedido.tipo_entrega === 'delivery' ? pedido.cliente_endereco : 'Retirada no Balcão'}</p><hr><h6>Itens:</h6>${itensHtml}</div><div class="card-footer text-end"><strong>Total: ${valorTotal}</strong></div>`;
                 containers.pedidos.appendChild(card);
             });
         }
@@ -204,35 +114,10 @@
         async function carregarProdutos() {
             containers.produtos.innerHTML = '<p>Carregando produtos...</p>';
             const produtos = await apiRequest('/api/produtos');
-             if (!produtos) {
-                containers.produtos.innerHTML = '<p class="text-danger">Não foi possível carregar os produtos.</p>';
-                return;
-            }
+             if (!produtos) { containers.produtos.innerHTML = '<p class="text-danger">Não foi possível carregar os produtos.</p>'; return; }
             const table = document.createElement('table');
             table.className = 'table table-hover align-middle';
-            table.innerHTML = `
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Categoria</th>
-                        <th>Preço Base</th>
-                        <th class="text-end">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${produtos.map(p => `
-                        <tr data-produto='${JSON.stringify(p)}'>
-                            <td>${p.nome}</td>
-                            <td>${p.categorias.nome}</td>
-                            <td>${parseFloat(p.preco_base).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-primary btn-acao btn-editar-produto"><i class="fas fa-edit"></i></button>
-                                <button class="btn btn-sm btn-outline-danger btn-acao btn-excluir-produto" data-id="${p.id}"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            `;
+            table.innerHTML = `<thead><tr><th>Nome</th><th>Categoria</th><th>Preço Base</th><th class="text-end">Ações</th></tr></thead><tbody>${produtos.map(p => `<tr data-produto='${JSON.stringify(p)}'><td>${p.nome}</td><td>${p.categorias.nome}</td><td>${parseFloat(p.preco_base).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td><td class="text-end"><button class="btn btn-sm btn-outline-primary btn-acao btn-editar-produto"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline-danger btn-acao btn-excluir-produto" data-id="${p.id}"><i class="fas fa-trash"></i></button></td></tr>`).join('')}</tbody>`;
             containers.produtos.innerHTML = '';
             containers.produtos.appendChild(table);
         }
@@ -240,18 +125,10 @@
         async function carregarCategorias() {
             containers.categorias.innerHTML = '<p>Carregando categorias...</p>';
             const categorias = await apiRequest('/api/categorias');
-             if (!categorias) {
-                containers.categorias.innerHTML = '<p class="text-danger">Não foi possível carregar as categorias.</p>';
-                return;
-            }
+             if (!categorias) { containers.categorias.innerHTML = '<p class="text-danger">Não foi possível carregar as categorias.</p>'; return; }
             const table = document.createElement('table');
             table.className = 'table table-hover';
-            table.innerHTML = `
-                <thead><tr><th>ID</th><th>Nome</th><th>Ordem de Exibição</th></tr></thead>
-                <tbody>
-                    ${categorias.map(c => `<tr><td>${c.id}</td><td>${c.nome}</td><td>${c.ordem}</td></tr>`).join('')}
-                </tbody>
-            `;
+            table.innerHTML = `<thead><tr><th>ID</th><th>Nome</th><th>Ordem de Exibição</th></tr></thead><tbody>${categorias.map(c => `<tr><td>${c.id}</td><td>${c.nome}</td><td>${c.ordem}</td></tr>`).join('')}</tbody>`;
             containers.categorias.innerHTML = '';
             containers.categorias.appendChild(table);
         }
@@ -259,29 +136,10 @@
         async function carregarIngredientes() {
             containers.ingredientes.innerHTML = '<p>Carregando ingredientes...</p>';
             const ingredientes = await apiRequest('/api/ingredientes');
-            if (!ingredientes) {
-                containers.ingredientes.innerHTML = '<p class="text-danger">Não foi possível carregar os ingredientes.</p>';
-                return;
-            }
+            if (!ingredientes) { containers.ingredientes.innerHTML = '<p class="text-danger">Não foi possível carregar os ingredientes.</p>'; return; }
             const table = document.createElement('table');
             table.className = 'table table-hover align-middle';
-            table.innerHTML = `
-                <thead><tr><th>Nome</th><th>Unidade</th><th>Estoque</th><th>É Adicional?</th><th>Preço Adicional</th><th class="text-end">Ações</th></tr></thead>
-                <tbody>
-                    ${ingredientes.map(i => `
-                        <tr>
-                            <td>${i.nome}</td>
-                            <td>${i.unidade || 'N/A'}</td>
-                            <td>${i.quantidade_estoque}</td>
-                            <td>${i.pode_ser_adicional ? '<span class="badge bg-success">Sim</span>' : '<span class="badge bg-secondary">Não</span>'}</td>
-                            <td>${i.pode_ser_adicional ? parseFloat(i.preco_adicional).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-secondary btn-acao btn-editar-estoque" data-id="${i.id}" data-nome="${i.nome}" data-estoque="${i.quantidade_estoque}"><i class="fas fa-edit"></i></button>
-                            </td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            `;
+            table.innerHTML = `<thead><tr><th>Nome</th><th>Estoque</th><th>É Adicional?</th><th>Preço</th><th class="text-end">Ações</th></tr></thead><tbody>${ingredientes.map(i => `<tr data-ingrediente='${JSON.stringify(i)}'><td>${i.nome} <small class="text-muted">(${i.unidade || 'N/A'})</small></td><td>${i.quantidade_estoque}</td><td>${i.pode_ser_adicional ? '<span class="badge bg-success">Sim</span>' : '<span class="badge bg-secondary">Não</span>'}</td><td>${i.pode_ser_adicional ? parseFloat(i.preco_adicional).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</td><td class="text-end"><button class="btn btn-sm btn-outline-primary btn-acao btn-editar-ingrediente"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline-danger btn-acao btn-excluir-ingrediente" data-id="${i.id}"><i class="fas fa-trash"></i></button></td></tr>`).join('')}</tbody>`;
             containers.ingredientes.innerHTML = '';
             containers.ingredientes.appendChild(table);
         }
@@ -291,11 +149,8 @@
             const selectCategoria = document.getElementById('produto-categoria');
             selectCategoria.innerHTML = '<option>Carregando...</option>';
             const categorias = await apiRequest('/api/categorias');
-            if (categorias) {
-                selectCategoria.innerHTML = categorias.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-            }
-
-            if (produto) { // Modo Edição
+            if (categorias) { selectCategoria.innerHTML = categorias.map(c => `<option value="${c.id}">${c.nome}</option>`).join(''); }
+            if (produto) {
                 document.getElementById('modalProdutoTitle').textContent = 'Editar Produto';
                 document.getElementById('produto-id').value = produto.id;
                 document.getElementById('produto-nome').value = produto.nome;
@@ -303,90 +158,85 @@
                 document.getElementById('produto-preco').value = produto.preco_base;
                 document.getElementById('produto-categoria').value = produto.categorias.id;
                 document.getElementById('produto-imagem').value = produto.imagem_url;
-            } else { // Modo Adição
+            } else {
                 document.getElementById('modalProdutoTitle').textContent = 'Adicionar Produto';
                 document.getElementById('produto-id').value = '';
             }
             modalProduto.show();
         }
+
+        function abrirModalIngrediente(ingrediente = null) {
+            const form = document.getElementById('form-ingrediente');
+            form.reset();
+            const camposAdicional = document.getElementById('campos-adicional');
+            if (ingrediente) {
+                document.getElementById('modalIngredienteTitle').textContent = 'Editar Ingrediente';
+                document.getElementById('ingrediente-id').value = ingrediente.id;
+                document.getElementById('ingrediente-nome').value = ingrediente.nome;
+                document.getElementById('ingrediente-unidade').value = ingrediente.unidade || '';
+                document.getElementById('ingrediente-estoque').value = ingrediente.quantidade_estoque;
+                document.getElementById('ingrediente-pode-adicional').checked = ingrediente.pode_ser_adicional;
+                document.getElementById('ingrediente-preco-adicional').value = ingrediente.preco_adicional || 0;
+                document.getElementById('ingrediente-desconto-uso').value = ingrediente.quantidade_descontada || 1;
+            } else {
+                document.getElementById('modalIngredienteTitle').textContent = 'Adicionar Ingrediente';
+                document.getElementById('ingrediente-id').value = '';
+                document.getElementById('ingrediente-desconto-uso').value = 1;
+            }
+            camposAdicional.style.display = document.getElementById('ingrediente-pode-adicional').checked ? 'block' : 'none';
+            modalIngrediente.show();
+        }
+
+        document.getElementById('ingrediente-pode-adicional').addEventListener('change', (e) => {
+            document.getElementById('campos-adicional').style.display = e.target.checked ? 'block' : 'none';
+        });
         
-        document.getElementById('form-produto').addEventListener('submit', async (e) => {
+        document.getElementById('form-produto').addEventListener('submit', async(e) => {
             e.preventDefault();
             const id = document.getElementById('produto-id').value;
-            const produto = {
-                nome: document.getElementById('produto-nome').value,
-                descricao: document.getElementById('produto-descricao').value,
-                preco_base: parseFloat(document.getElementById('produto-preco').value),
-                categoria_id: parseInt(document.getElementById('produto-categoria').value),
-                imagem_url: document.getElementById('produto-imagem').value,
-            };
-            
-            const resultado = id
-                ? await apiRequest(`/api/produtos/${id}`, 'PUT', produto)
-                : await apiRequest('/api/produtos', 'POST', produto);
-
-            if (resultado !== null) {
-                modalProduto.hide();
-                carregarProdutos();
-            }
+            const produto = { nome: document.getElementById('produto-nome').value, descricao: document.getElementById('produto-descricao').value, preco_base: parseFloat(document.getElementById('produto-preco').value), categoria_id: parseInt(document.getElementById('produto-categoria').value), imagem_url: document.getElementById('produto-imagem').value };
+            const resultado = id ? await apiRequest(`/api/produtos/${id}`, 'PUT', produto) : await apiRequest('/api/produtos', 'POST', produto);
+            if (resultado !== null) { modalProduto.hide(); carregarProdutos(); }
         });
 
-        document.getElementById('btn-adicionar-categoria').addEventListener('click', async () => {
+        document.getElementById('form-ingrediente').addEventListener('submit', async(e) => {
+            e.preventDefault();
+            const id = document.getElementById('ingrediente-id').value;
+            const ingrediente = {
+                nome: document.getElementById('ingrediente-nome').value,
+                unidade: document.getElementById('ingrediente-unidade').value,
+                quantidade_estoque: parseInt(document.getElementById('ingrediente-estoque').value),
+                pode_ser_adicional: document.getElementById('ingrediente-pode-adicional').checked,
+                preco_adicional: parseFloat(document.getElementById('ingrediente-preco-adicional').value || 0),
+                quantidade_descontada: parseInt(document.getElementById('ingrediente-desconto-uso').value || 1)
+            };
+            const resultado = id ? await apiRequest(`/api/ingredientes/${id}`, 'PUT', ingrediente) : await apiRequest('/api/ingredientes', 'POST', ingrediente);
+            if (resultado !== null) { modalIngrediente.hide(); carregarIngredientes(); }
+        });
+
+        document.getElementById('btn-adicionar-categoria').addEventListener('click', async() => {
             const nome = prompt("Digite o nome da nova categoria:");
             if (!nome) return;
             const ordem = prompt("Digite a ordem de exibição (número):", "10");
             if (ordem === null) return;
-
             const resultado = await apiRequest('/api/categorias', 'POST', { nome, ordem: parseInt(ordem) });
             if (resultado) carregarCategorias();
         });
-
-        document.getElementById('btn-adicionar-ingrediente').addEventListener('click', async () => {
-            const nome = prompt("Digite o nome do novo ingrediente:");
-            if (!nome) return;
-            const unidade = prompt("Digite a unidade de medida (ex: 'g', 'un', 'fatia'):", "un");
-            if (unidade === null) return;
-            const quantidade_estoque = prompt("Digite a quantidade inicial em estoque:", "0");
-
-            const resultado = await apiRequest('/api/ingredientes', 'POST', { nome, unidade, quantidade_estoque: parseInt(quantidade_estoque) });
-            if (resultado) carregarIngredientes();
-        });
-
-        document.body.addEventListener('click', async (e) => {
+        
+        document.body.addEventListener('click', async(e) => {
             const btnEditarProduto = e.target.closest('.btn-editar-produto');
             const btnExcluirProduto = e.target.closest('.btn-excluir-produto');
-            const btnEditarEstoque = e.target.closest('.btn-editar-estoque');
+            const btnEditarIngrediente = e.target.closest('.btn-editar-ingrediente');
+            const btnExcluirIngrediente = e.target.closest('.btn-excluir-ingrediente');
             
-            if (btnEditarProduto) {
-                const tr = btnEditarProduto.closest('tr');
-                const produto = JSON.parse(tr.dataset.produto);
-                abrirModalProduto(produto);
-            }
-
-            if (btnExcluirProduto) {
-                const id = btnExcluirProduto.dataset.id;
-                const nome = btnExcluirProduto.closest('tr').cells[0].textContent;
-                if (confirm(`Tem certeza que deseja excluir o produto "${nome}"?`)) {
-                    await apiRequest(`/api/produtos/${id}`, 'DELETE');
-                    carregarProdutos();
-                }
-            }
-
-            if(btnEditarEstoque) {
-                const id = btnEditarEstoque.dataset.id;
-                const nome = btnEditarEstoque.dataset.nome;
-                const estoqueAtual = btnEditarEstoque.dataset.estoque;
-                const novoEstoque = prompt(`Digite o novo valor do estoque para "${nome}":`, estoqueAtual);
-
-                if(novoEstoque !== null && !isNaN(novoEstoque)) {
-                    const resultado = await apiRequest(`/api/ingredientes/${id}`, 'PUT', { quantidade_estoque: parseInt(novoEstoque) });
-                    if(resultado) carregarIngredientes();
-                }
-            }
+            if (btnEditarProduto) abrirModalProduto(JSON.parse(btnEditarProduto.closest('tr').dataset.produto));
+            if (btnExcluirProduto) { const id = btnExcluirProduto.dataset.id; const nome = btnExcluirProduto.closest('tr').cells[0].textContent; if (confirm(`Tem certeza que deseja excluir o produto "${nome}"?`)) { await apiRequest(`/api/produtos/${id}`, 'DELETE'); carregarProdutos(); } }
+            if (btnEditarIngrediente) abrirModalIngrediente(JSON.parse(btnEditarIngrediente.closest('tr').dataset.ingrediente));
+            if (btnExcluirIngrediente) { const id = btnExcluirIngrediente.dataset.id; const nome = btnExcluirIngrediente.closest('tr').cells[0].textContent; if (confirm(`Tem certeza que deseja excluir o ingrediente "${nome}"?`)) { await apiRequest(`/api/ingredientes/${id}`, 'DELETE'); carregarIngredientes(); } }
         });
 
-        carregarPedidos();
         document.getElementById('btn-adicionar-produto').addEventListener('click', () => abrirModalProduto());
+        document.getElementById('btn-adicionar-ingrediente').addEventListener('click', () => abrirModalIngrediente());
         
         document.getElementById('pedidos-tab').addEventListener('shown.bs.tab', carregarPedidos);
         document.getElementById('produtos-tab').addEventListener('shown.bs.tab', carregarProdutos);
@@ -394,6 +244,7 @@
         document.getElementById('ingredientes-tab').addEventListener('shown.bs.tab', carregarIngredientes);
 
         document.getElementById('btn-recarregar-pedidos').addEventListener('click', carregarPedidos);
+        carregarPedidos();
     });
     </script>
 </body>
