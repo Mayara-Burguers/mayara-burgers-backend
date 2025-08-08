@@ -253,19 +253,41 @@ app.get('/api/adicionais', async (req, res) => {
     }
 });
 
+// Encontre esta rota no seu server.js e substitua pela versão abaixo
 app.put('/api/ingredientes/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { quantidade_estoque } = req.body;
+        // Agora pegamos todos os campos do corpo da requisição
+        const { 
+            nome, 
+            unidade, 
+            quantidade_estoque, 
+            pode_ser_adicional, 
+            preco_adicional,
+            quantidade_descontada // Novo campo
+        } = req.body;
+
+        // Monta o objeto de atualização apenas com os campos fornecidos
+        const camposParaAtualizar = {};
+        if (nome !== undefined) camposParaAtualizar.nome = nome;
+        if (unidade !== undefined) camposParaAtualizar.unidade = unidade;
+        if (quantidade_estoque !== undefined) camposParaAtualizar.quantidade_estoque = quantidade_estoque;
+        if (pode_ser_adicional !== undefined) camposParaAtualizar.pode_ser_adicional = pode_ser_adicional;
+        // Se pode ser adicional, atualiza o preço, caso contrário, zera o preço.
+        camposParaAtualizar.preco_adicional = pode_ser_adicional ? (preco_adicional || 0) : 0;
+        if (quantidade_descontada !== undefined) camposParaAtualizar.quantidade_descontada = quantidade_descontada;
+
         const { error } = await supabase
             .from('ingredientes')
-            .update({ quantidade_estoque })
+            .update(camposParaAtualizar)
             .eq('id', id);
+            
         if (error) throw error;
-        res.status(200).json({ message: 'Estoque atualizado com sucesso!' });
+        
+        res.status(200).json({ message: 'Ingrediente atualizado com sucesso!' });
     } catch (error) { 
-        console.error("Erro ao atualizar estoque:", error);
-        res.status(500).json({ error: 'Erro interno ao atualizar estoque.' }); 
+        console.error("Erro ao atualizar ingrediente:", error);
+        res.status(500).json({ error: 'Erro interno ao atualizar ingrediente.' }); 
     }
 });
 
@@ -302,3 +324,4 @@ app.delete('/api/ingredientes/:id', async (req, res) => {
 app.listen(port, () => {
     console.log(`Servidor rodando na porta ${port}`);
 });
+
