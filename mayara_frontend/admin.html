@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -14,7 +13,6 @@
         .nav-tabs .nav-link.active { color: #000; font-weight: bold; border-color: #dee2e6 #dee2e6 #fff; }
         .tab-content { background-color: #fff; padding: 2rem; border: 1px solid #dee2e6; border-top: 0; }
         .btn-acao { width: 38px; height: 38px; }
-        .form-check-input { width: 1.5em; height: 1.5em; }
     </style>
 </head>
 <body>
@@ -26,49 +24,109 @@
     <main class="container my-4">
         <ul class="nav nav-tabs" id="adminTab" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="pedidos-tab" data-bs-toggle="tab" data-bs-target="#pedidos-pane" type="button" role="tab"><i class="fas fa-receipt"></i> Pedidos</button>
+                <button class="nav-link active" id="pedidos-tab" data-bs-toggle="tab" data-bs-target="#pedidos-pane" type="button" role="tab">
+                    <i class="fas fa-receipt"></i> Pedidos
+                </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="produtos-tab" data-bs-toggle="tab" data-bs-target="#produtos-pane" type="button" role="tab"><i class="fas fa-hamburger"></i> Produtos</button>
+                <button class="nav-link" id="produtos-tab" data-bs-toggle="tab" data-bs-target="#produtos-pane" type="button" role="tab">
+                    <i class="fas fa-hamburger"></i> Produtos
+                </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="categorias-tab" data-bs-toggle="tab" data-bs-target="#categorias-pane" type="button" role="tab"><i class="fas fa-tags"></i> Categorias</button>
+                <button class="nav-link" id="categorias-tab" data-bs-toggle="tab" data-bs-target="#categorias-pane" type="button" role="tab">
+                    <i class="fas fa-tags"></i> Categorias
+                </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="ingredientes-tab" data-bs-toggle="tab" data-bs-target="#ingredientes-pane" type="button" role="tab"><i class="fas fa-carrot"></i> Ingredientes/Estoque</button>
+                <button class="nav-link" id="ingredientes-tab" data-bs-toggle="tab" data-bs-target="#ingredientes-pane" type="button" role="tab">
+                    <i class="fas fa-carrot"></i> Ingredientes/Estoque
+                </button>
             </li>
         </ul>
 
         <div class="tab-content" id="adminTabContent">
             <div class="tab-pane fade show active" id="pedidos-pane" role="tabpanel">
-                <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h4">Histórico de Pedidos</h2><button id="btn-recarregar-pedidos" class="btn btn-sm btn-outline-primary"><i class="fas fa-sync-alt"></i> Recarregar</button></div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h4">Histórico de Pedidos</h2>
+                    <button id="btn-recarregar-pedidos" class="btn btn-sm btn-outline-primary"><i class="fas fa-sync-alt"></i> Recarregar</button>
+                </div>
                 <div id="pedidos-container"></div>
             </div>
+
             <div class="tab-pane fade" id="produtos-pane" role="tabpanel">
-                <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h4">Gerenciar Produtos</h2><button id="btn-adicionar-produto" class="btn btn-success"><i class="fas fa-plus"></i> Adicionar Produto</button></div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h4">Gerenciar Produtos</h2>
+                    <button id="btn-adicionar-produto" class="btn btn-success"><i class="fas fa-plus"></i> Adicionar Produto</button>
+                </div>
                 <div id="produtos-container" class="table-responsive"></div>
             </div>
+
             <div class="tab-pane fade" id="categorias-pane" role="tabpanel">
-                 <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h4">Gerenciar Categorias</h2><button id="btn-adicionar-categoria" class="btn btn-success"><i class="fas fa-plus"></i> Adicionar Categoria</button></div>
+                 <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h4">Gerenciar Categorias</h2>
+                    <button id="btn-adicionar-categoria" class="btn btn-success"><i class="fas fa-plus"></i> Adicionar Categoria</button>
+                </div>
                 <div id="categorias-container" class="table-responsive"></div>
             </div>
+
             <div class="tab-pane fade" id="ingredientes-pane" role="tabpanel">
-                <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h4">Gerenciar Ingredientes e Estoque</h2><button id="btn-adicionar-ingrediente" class="btn btn-success"><i class="fas fa-plus"></i> Adicionar Ingrediente</button></div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h4">Gerenciar Ingredientes e Estoque</h2>
+                    <button id="btn-adicionar-ingrediente" class="btn btn-success"><i class="fas fa-plus"></i> Adicionar Ingrediente</button>
+                </div>
                 <div id="ingredientes-container" class="table-responsive"></div>
             </div>
         </div>
     </main>
     
-    <div class="modal fade" id="modalProduto" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><form id="form-produto"><div class="modal-header"><h5 class="modal-title" id="modalProdutoTitle">Adicionar Produto</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="produto-id"><div class="mb-3"><label for="produto-nome" class="form-label">Nome</label><input type="text" class="form-control" id="produto-nome" required></div><div class="mb-3"><label for="produto-descricao" class="form-label">Descrição</label><textarea class="form-control" id="produto-descricao"></textarea></div><div class="row"><div class="col-md-6 mb-3"><label for="produto-preco" class="form-label">Preço Base (R$)</label><input type="number" step="0.01" class="form-control" id="produto-preco" required></div><div class="col-md-6 mb-3"><label for="produto-categoria" class="form-label">Categoria</label><select class="form-select" id="produto-categoria" required></select></div></div><div class="mb-3"><label for="produto-imagem" class="form-label">URL da Imagem</label><input type="url" class="form-control" id="produto-imagem"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div></form></div></div></div>
+    <div class="modal fade" id="modalProduto" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="form-produto">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalProdutoTitle">Adicionar Produto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="produto-id">
+                        <div class="mb-3">
+                            <label for="produto-nome" class="form-label">Nome do Produto</label>
+                            <input type="text" class="form-control" id="produto-nome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="produto-descricao" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="produto-descricao"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="produto-preco" class="form-label">Preço Base (R$)</label>
+                                <input type="number" step="0.01" class="form-control" id="produto-preco" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="produto-categoria" class="form-label">Categoria</label>
+                                <select class="form-select" id="produto-categoria" required></select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="produto-imagem" class="form-label">URL da Imagem</label>
+                            <input type="url" class="form-control" id="produto-imagem">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     
-    <div class="modal fade" id="modalIngrediente" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><form id="form-ingrediente"><div class="modal-header"><h5 class="modal-title" id="modalIngredienteTitle">Adicionar Ingrediente</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="ingrediente-id"><div class="mb-3"><label for="ingrediente-nome" class="form-label">Nome</label><input type="text" class="form-control" id="ingrediente-nome" required></div><div class="row"><div class="col-md-6 mb-3"><label for="ingrediente-unidade" class="form-label">Unidade de Medida</label><input type="text" class="form-control" id="ingrediente-unidade" placeholder="Ex: g, un, fatia"></div><div class="col-md-6 mb-3"><label for="ingrediente-estoque" class="form-label">Qtd. em Estoque</label><input type="number" step="1" class="form-control" id="ingrediente-estoque" required></div></div><hr><div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" role="switch" id="ingrediente-pode-adicional"><label class="form-check-label" for="ingrediente-pode-adicional">Pode ser vendido como Adicional?</label></div><div id="campos-adicional" style="display:none;"><div class="row"><div class="col-md-6 mb-3"><label for="ingrediente-preco-adicional" class="form-label">Preço do Adicional (R$)</label><input type="number" step="0.01" class="form-control" id="ingrediente-preco-adicional"></div><div class="col-md-6 mb-3"><label for="ingrediente-desconto-uso" class="form-label">Desconto do Estoque</label><input type="number" step="1" class="form-control" id="ingrediente-desconto-uso" placeholder="Qtd. por escolha"><small class="form-text text-muted">Quanto abater do estoque a cada vez que for pedido.</small></div></div></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div></form></div></div></div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const BASE_URL = 'https://mayara-backend-servidor.onrender.com';
         const modalProduto = new bootstrap.Modal(document.getElementById('modalProduto'));
-        const modalIngrediente = new bootstrap.Modal(document.getElementById('modalIngrediente'));
         
         const containers = {
             pedidos: document.getElementById('pedidos-container'),
@@ -78,8 +136,14 @@
         };
         
         async function apiRequest(endpoint, method = 'GET', body = null) {
-            const options = { method, headers: { 'Content-Type': 'application/json' } };
-            if (body) options.body = JSON.stringify(body);
+            const options = {
+                method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
             try {
                 const response = await fetch(`${BASE_URL}${endpoint}`, options);
                 if (!response.ok) {
@@ -202,17 +266,17 @@
             const table = document.createElement('table');
             table.className = 'table table-hover align-middle';
             table.innerHTML = `
-                <thead><tr><th>Nome</th><th>Estoque</th><th>É Adicional?</th><th>Preço</th><th class="text-end">Ações</th></tr></thead>
+                <thead><tr><th>Nome</th><th>Unidade</th><th>Estoque</th><th>É Adicional?</th><th>Preço Adicional</th><th class="text-end">Ações</th></tr></thead>
                 <tbody>
                     ${ingredientes.map(i => `
-                        <tr data-ingrediente='${JSON.stringify(i)}'>
-                            <td>${i.nome} <small class="text-muted">(${i.unidade || 'N/A'})</small></td>
+                        <tr>
+                            <td>${i.nome}</td>
+                            <td>${i.unidade || 'N/A'}</td>
                             <td>${i.quantidade_estoque}</td>
                             <td>${i.pode_ser_adicional ? '<span class="badge bg-success">Sim</span>' : '<span class="badge bg-secondary">Não</span>'}</td>
                             <td>${i.pode_ser_adicional ? parseFloat(i.preco_adicional).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</td>
                             <td class="text-end">
-                                <button class="btn btn-sm btn-outline-primary btn-acao btn-editar-ingrediente"><i class="fas fa-edit"></i></button>
-                                <button class="btn btn-sm btn-outline-danger btn-acao btn-excluir-ingrediente" data-id="${i.id}"><i class="fas fa-trash"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary btn-acao btn-editar-estoque" data-id="${i.id}" data-nome="${i.nome}" data-estoque="${i.quantidade_estoque}"><i class="fas fa-edit"></i></button>
                             </td>
                         </tr>
                     `).join('')}
@@ -245,35 +309,8 @@
             }
             modalProduto.show();
         }
-
-        function abrirModalIngrediente(ingrediente = null) {
-            const form = document.getElementById('form-ingrediente');
-            form.reset();
-            const camposAdicional = document.getElementById('campos-adicional');
-            
-            if (ingrediente) { // Edição
-                document.getElementById('modalIngredienteTitle').textContent = 'Editar Ingrediente';
-                document.getElementById('ingrediente-id').value = ingrediente.id;
-                document.getElementById('ingrediente-nome').value = ingrediente.nome;
-                document.getElementById('ingrediente-unidade').value = ingrediente.unidade || '';
-                document.getElementById('ingrediente-estoque').value = ingrediente.quantidade_estoque;
-                document.getElementById('ingrediente-pode-adicional').checked = ingrediente.pode_ser_adicional;
-                document.getElementById('ingrediente-preco-adicional').value = ingrediente.preco_adicional || 0;
-                document.getElementById('ingrediente-desconto-uso').value = ingrediente.quantidade_descontada || 1;
-            } else { // Adição
-                document.getElementById('modalIngredienteTitle').textContent = 'Adicionar Ingrediente';
-                document.getElementById('ingrediente-id').value = '';
-                document.getElementById('ingrediente-desconto-uso').value = 1;
-            }
-            camposAdicional.style.display = document.getElementById('ingrediente-pode-adicional').checked ? 'block' : 'none';
-            modalIngrediente.show();
-        }
-
-        document.getElementById('ingrediente-pode-adicional').addEventListener('change', (e) => {
-            document.getElementById('campos-adicional').style.display = e.target.checked ? 'block' : 'none';
-        });
         
-        document.getElementById('form-produto').addEventListener('submit', async(e) => {
+        document.getElementById('form-produto').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('produto-id').value;
             const produto = {
@@ -283,47 +320,49 @@
                 categoria_id: parseInt(document.getElementById('produto-categoria').value),
                 imagem_url: document.getElementById('produto-imagem').value,
             };
-            const resultado = id ? await apiRequest(`/api/produtos/${id}`, 'PUT', produto) : await apiRequest('/api/produtos', 'POST', produto);
+            
+            const resultado = id
+                ? await apiRequest(`/api/produtos/${id}`, 'PUT', produto)
+                : await apiRequest('/api/produtos', 'POST', produto);
+
             if (resultado !== null) {
                 modalProduto.hide();
                 carregarProdutos();
             }
         });
 
-        document.getElementById('form-ingrediente').addEventListener('submit', async(e) => {
-            e.preventDefault();
-            const id = document.getElementById('ingrediente-id').value;
-            const ingrediente = {
-                nome: document.getElementById('ingrediente-nome').value,
-                unidade: document.getElementById('ingrediente-unidade').value,
-                quantidade_estoque: parseInt(document.getElementById('ingrediente-estoque').value),
-                pode_ser_adicional: document.getElementById('ingrediente-pode-adicional').checked,
-                preco_adicional: parseFloat(document.getElementById('ingrediente-preco-adicional').value || 0),
-                quantidade_descontada: parseInt(document.getElementById('ingrediente-desconto-uso').value || 1)
-            };
-            const resultado = id ? await apiRequest(`/api/ingredientes/${id}`, 'PUT', ingrediente) : await apiRequest('/api/ingredientes', 'POST', ingrediente);
-            if (resultado !== null) {
-                modalIngrediente.hide();
-                carregarIngredientes();
-            }
-        });
-
-        document.getElementById('btn-adicionar-categoria').addEventListener('click', async() => {
+        document.getElementById('btn-adicionar-categoria').addEventListener('click', async () => {
             const nome = prompt("Digite o nome da nova categoria:");
             if (!nome) return;
             const ordem = prompt("Digite a ordem de exibição (número):", "10");
             if (ordem === null) return;
+
             const resultado = await apiRequest('/api/categorias', 'POST', { nome, ordem: parseInt(ordem) });
             if (resultado) carregarCategorias();
         });
-        
-        document.body.addEventListener('click', async(e) => {
+
+        document.getElementById('btn-adicionar-ingrediente').addEventListener('click', async () => {
+            const nome = prompt("Digite o nome do novo ingrediente:");
+            if (!nome) return;
+            const unidade = prompt("Digite a unidade de medida (ex: 'g', 'un', 'fatia'):", "un");
+            if (unidade === null) return;
+            const quantidade_estoque = prompt("Digite a quantidade inicial em estoque:", "0");
+
+            const resultado = await apiRequest('/api/ingredientes', 'POST', { nome, unidade, quantidade_estoque: parseInt(quantidade_estoque) });
+            if (resultado) carregarIngredientes();
+        });
+
+        document.body.addEventListener('click', async (e) => {
             const btnEditarProduto = e.target.closest('.btn-editar-produto');
             const btnExcluirProduto = e.target.closest('.btn-excluir-produto');
-            const btnEditarIngrediente = e.target.closest('.btn-editar-ingrediente');
-            const btnExcluirIngrediente = e.target.closest('.btn-excluir-ingrediente');
+            const btnEditarEstoque = e.target.closest('.btn-editar-estoque');
             
-            if (btnEditarProduto) abrirModalProduto(JSON.parse(btnEditarProduto.closest('tr').dataset.produto));
+            if (btnEditarProduto) {
+                const tr = btnEditarProduto.closest('tr');
+                const produto = JSON.parse(tr.dataset.produto);
+                abrirModalProduto(produto);
+            }
+
             if (btnExcluirProduto) {
                 const id = btnExcluirProduto.dataset.id;
                 const nome = btnExcluirProduto.closest('tr').cells[0].textContent;
@@ -332,19 +371,22 @@
                     carregarProdutos();
                 }
             }
-            if (btnEditarIngrediente) abrirModalIngrediente(JSON.parse(btnEditarIngrediente.closest('tr').dataset.ingrediente));
-            if (btnExcluirIngrediente) {
-                const id = btnExcluirIngrediente.dataset.id;
-                const nome = btnExcluirIngrediente.closest('tr').cells[0].textContent;
-                if (confirm(`Tem certeza que deseja excluir o ingrediente "${nome}"?`)) {
-                    await apiRequest(`/api/ingredientes/${id}`, 'DELETE');
-                    carregarIngredientes();
+
+            if(btnEditarEstoque) {
+                const id = btnEditarEstoque.dataset.id;
+                const nome = btnEditarEstoque.dataset.nome;
+                const estoqueAtual = btnEditarEstoque.dataset.estoque;
+                const novoEstoque = prompt(`Digite o novo valor do estoque para "${nome}":`, estoqueAtual);
+
+                if(novoEstoque !== null && !isNaN(novoEstoque)) {
+                    const resultado = await apiRequest(`/api/ingredientes/${id}`, 'PUT', { quantidade_estoque: parseInt(novoEstoque) });
+                    if(resultado) carregarIngredientes();
                 }
             }
         });
 
+        carregarPedidos();
         document.getElementById('btn-adicionar-produto').addEventListener('click', () => abrirModalProduto());
-        document.getElementById('btn-adicionar-ingredente').addEventListener('click', () => abrirModalIngrediente());
         
         document.getElementById('pedidos-tab').addEventListener('shown.bs.tab', carregarPedidos);
         document.getElementById('produtos-tab').addEventListener('shown.bs.tab', carregarProdutos);
@@ -352,7 +394,6 @@
         document.getElementById('ingredientes-tab').addEventListener('shown.bs.tab', carregarIngredientes);
 
         document.getElementById('btn-recarregar-pedidos').addEventListener('click', carregarPedidos);
-        carregarPedidos();
     });
     </script>
 </body>
