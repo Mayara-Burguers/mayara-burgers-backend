@@ -1,375 +1,400 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Mayara Burguer's</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+    <title>Painel de Controle - Mayara Burguer's</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
     <style>
-        body {
-            background-color: #f8f9fa;
-        }
-
-        .header {
-            background-color: #343a40;
-            color: white;
-            padding: 1rem;
-            text-align: center;
-        }
-
-        .pedido {
-            background-color: #fff;
-            border: 1px solid #dee2e6;
-            border-radius: .5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-
-        .pedido-header {
-            background-color: #f1f1f1;
-            padding: 0.75rem 1.25rem;
-            border-bottom: 1px solid #dee2e6;
-            font-weight: bold;
-        }
-
-        .pedido-body {
-            padding: 1.25rem;
-        }
-
-        .pedido-footer {
-            background-color: #f1f1f1;
-            padding: 0.75rem 1.25rem;
-            border-top: 1px solid #dee2e6;
-            font-weight: bold;
-            text-align: right;
-        }
-        
-        .item-detalhes {
-            font-size: 0.9rem;
-            color: #6c757d;
-            margin-left: 15px;
-        }
+        body { background-color: #f8f9fa; }
+        .header { background-color: #343a40; color: white; padding: 1.5rem; text-align: center; }
+        .nav-tabs .nav-link { color: #495057; }
+        .nav-tabs .nav-link.active { color: #000; font-weight: bold; border-color: #dee2e6 #dee2e6 #fff; }
+        .tab-content { background-color: #fff; padding: 2rem; border: 1px solid #dee2e6; border-top: 0; }
+        .btn-acao { width: 38px; height: 38px; }
     </style>
 </head>
-
 <body>
 
     <header class="header">
-        <h1><i class="fas fa-cogs"></i> Painel de Controle - Pedidos</h1>
+        <h1><i class="fas fa-cogs"></i> Painel de Controle</h1>
     </header>
 
     <main class="container my-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="h4">Histórico de Pedidos</h2>
-            <button id="btn-recarregar" class="btn btn-primary">
-                <i class="fas fa-sync-alt"></i> Recarregar Pedidos
-            </button>
-        </div>
-        
-        <div id="pedidos-container">
-            <p class="text-center">Carregando pedidos...</p>
+        <ul class="nav nav-tabs" id="adminTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pedidos-tab" data-bs-toggle="tab" data-bs-target="#pedidos-pane" type="button" role="tab">
+                    <i class="fas fa-receipt"></i> Pedidos
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="produtos-tab" data-bs-toggle="tab" data-bs-target="#produtos-pane" type="button" role="tab">
+                    <i class="fas fa-hamburger"></i> Produtos
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="categorias-tab" data-bs-toggle="tab" data-bs-target="#categorias-pane" type="button" role="tab">
+                    <i class="fas fa-tags"></i> Categorias
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="ingredientes-tab" data-bs-toggle="tab" data-bs-target="#ingredientes-pane" type="button" role="tab">
+                    <i class="fas fa-carrot"></i> Ingredientes/Estoque
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="adminTabContent">
+            <div class="tab-pane fade show active" id="pedidos-pane" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h4">Histórico de Pedidos</h2>
+                    <button id="btn-recarregar-pedidos" class="btn btn-sm btn-outline-primary"><i class="fas fa-sync-alt"></i> Recarregar</button>
+                </div>
+                <div id="pedidos-container"></div>
+            </div>
+
+            <div class="tab-pane fade" id="produtos-pane" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h4">Gerenciar Produtos</h2>
+                    <button id="btn-adicionar-produto" class="btn btn-success"><i class="fas fa-plus"></i> Adicionar Produto</button>
+                </div>
+                <div id="produtos-container" class="table-responsive"></div>
+            </div>
+
+            <div class="tab-pane fade" id="categorias-pane" role="tabpanel">
+                 <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h4">Gerenciar Categorias</h2>
+                    <button id="btn-adicionar-categoria" class="btn btn-success"><i class="fas fa-plus"></i> Adicionar Categoria</button>
+                </div>
+                <div id="categorias-container" class="table-responsive"></div>
+            </div>
+
+            <div class="tab-pane fade" id="ingredientes-pane" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h4">Gerenciar Ingredientes e Estoque</h2>
+                    <button id="btn-adicionar-ingrediente" class="btn btn-success"><i class="fas fa-plus"></i> Adicionar Ingrediente</button>
+                </div>
+                <div id="ingredientes-container" class="table-responsive"></div>
+            </div>
         </div>
     </main>
-
-    <footer class="text-center text-muted py-3">
-        <p>© 2025 Mayara Burguer's</p>
-    </footer>
-
+    
+    <div class="modal fade" id="modalProduto" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="form-produto">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalProdutoTitle">Adicionar Produto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="produto-id">
+                        <div class="mb-3">
+                            <label for="produto-nome" class="form-label">Nome do Produto</label>
+                            <input type="text" class="form-control" id="produto-nome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="produto-descricao" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="produto-descricao"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="produto-preco" class="form-label">Preço Base (R$)</label>
+                                <input type="number" step="0.01" class="form-control" id="produto-preco" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="produto-categoria" class="form-label">Categoria</label>
+                                <select class="form-select" id="produto-categoria" required></select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="produto-imagem" class="form-label">URL da Imagem</label>
+                            <input type="url" class="form-control" id="produto-imagem">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const BASE_URL = 'https://mayara-backend-servidor.onrender.com';
-    const modalProduto = new bootstrap.Modal(document.getElementById('modalProduto'));
-    
-    // Mapeamento de containers
-    const containers = {
-        pedidos: document.getElementById('pedidos-container'),
-        produtos: document.getElementById('produtos-container'),
-        categorias: document.getElementById('categorias-container'),
-        ingredientes: document.getElementById('ingredientes-container')
-    };
-    
-    // --- FUNÇÕES DE API GENÉRICAS ---
-    async function apiRequest(endpoint, method = 'GET', body = null) {
-        const options = {
-            method,
-            headers: {
-                'Content-Type': 'application/json'
-            }
+    document.addEventListener('DOMContentLoaded', () => {
+        const BASE_URL = 'https://mayara-backend-servidor.onrender.com';
+        const modalProduto = new bootstrap.Modal(document.getElementById('modalProduto'));
+        
+        const containers = {
+            pedidos: document.getElementById('pedidos-container'),
+            produtos: document.getElementById('produtos-container'),
+            categorias: document.getElementById('categorias-container'),
+            ingredientes: document.getElementById('ingredientes-container')
         };
-        if (body) {
-            options.body = JSON.stringify(body);
-        }
-
-        try {
-            const response = await fetch(`${BASE_URL}${endpoint}`, options);
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `Erro na rede: ${response.statusText}`);
+        
+        async function apiRequest(endpoint, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+            if (body) {
+                options.body = JSON.stringify(body);
             }
-            if (response.status === 204) { // No Content, para DELETE
+
+            try {
+                const response = await fetch(`${BASE_URL}${endpoint}`, options);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+                    throw new Error(errorData.error || `Erro na rede: ${response.statusText}`);
+                }
+                if (response.status === 204) return null;
+                return await response.json();
+            } catch (error) {
+                console.error(`Falha na requisição para ${endpoint}:`, error);
+                alert(`Erro: ${error.message}`);
                 return null;
             }
-            return await response.json();
-        } catch (error) {
-            console.error(`Falha na requisição para ${endpoint}:`, error);
-            alert(`Erro: ${error.message}`);
-            return null;
-        }
-    }
-    
-    // --- LÓGICA DE PEDIDOS ---
-    async function carregarPedidos() {
-        containers.pedidos.innerHTML = '<p>Carregando histórico de pedidos...</p>';
-        const pedidos = await apiRequest('/api/pedidos');
-        if (!pedidos) {
-            containers.pedidos.innerHTML = '<p class="text-danger">Não foi possível carregar os pedidos.</p>';
-            return;
-        }
-        if (pedidos.length === 0) {
-            containers.pedidos.innerHTML = '<p class="text-muted">Nenhum pedido encontrado.</p>';
-            return;
         }
         
-        containers.pedidos.innerHTML = '';
-        pedidos.forEach(pedido => {
-            const dataHora = new Date(pedido.data_hora).toLocaleString('pt-BR');
-            const valorTotal = parseFloat(pedido.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            let itensHtml = (pedido.itens_do_pedido && pedido.itens_do_pedido.length > 0)
-                ? `<ul>${pedido.itens_do_pedido.map(item => `<li>${item.quantidade}x ${item.nome_produto} ${item.observacoes ? `<em>(${item.observacoes})</em>` : ''}</li>`).join('')}</ul>`
-                : '<p class="small text-muted">Sem detalhes de itens.</p>';
+        async function carregarPedidos() {
+            containers.pedidos.innerHTML = '<p>Carregando histórico de pedidos...</p>';
+            const pedidos = await apiRequest('/api/pedidos');
+            if (!pedidos) {
+                containers.pedidos.innerHTML = '<p class="text-danger">Não foi possível carregar os pedidos.</p>';
+                return;
+            }
+            if (pedidos.length === 0) {
+                containers.pedidos.innerHTML = '<p class="text-muted">Nenhum pedido encontrado.</p>';
+                return;
+            }
+            
+            containers.pedidos.innerHTML = '';
+            pedidos.forEach(pedido => {
+                const dataHora = new Date(pedido.data_hora).toLocaleString('pt-BR');
+                const valorTotal = parseFloat(pedido.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                let itensHtml = (pedido.itens_do_pedido && pedido.itens_do_pedido.length > 0)
+                    ? `<ul>${pedido.itens_do_pedido.map(item => `<li>${item.quantidade}x ${item.nome_produto} ${item.observacoes ? `<em>(${item.observacoes})</em>` : ''}</li>`).join('')}</ul>`
+                    : '<p class="small text-muted">Sem detalhes de itens.</p>';
 
-            const card = document.createElement('div');
-            card.className = 'card mb-3';
-            card.innerHTML = `
-                <div class="card-header d-flex justify-content-between">
-                    <strong>Pedido #${pedido.id}</strong>
-                    <span class="text-muted">${dataHora}</span>
-                </div>
-                <div class="card-body">
-                    <p class="mb-1"><strong>Cliente:</strong> ${pedido.cliente_nome}</p>
-                    <p class="mb-1"><strong>Endereço:</strong> ${pedido.tipo_entrega === 'delivery' ? pedido.cliente_endereco : 'Retirada no Balcão'}</p>
-                    <hr>
-                    <h6>Itens:</h6>
-                    ${itensHtml}
-                </div>
-                <div class="card-footer text-end">
-                    <strong>Total: ${valorTotal}</strong>
-                </div>
-            `;
-            containers.pedidos.appendChild(card);
-        });
-    }
-    
-    // --- LÓGICA DE PRODUTOS ---
-    async function carregarProdutos() {
-        containers.produtos.innerHTML = '<p>Carregando produtos...</p>';
-        const produtos = await apiRequest('/api/produtos');
-         if (!produtos) {
-            containers.produtos.innerHTML = '<p class="text-danger">Não foi possível carregar os produtos.</p>';
-            return;
+                const card = document.createElement('div');
+                card.className = 'card mb-3';
+                card.innerHTML = `
+                    <div class="card-header d-flex justify-content-between">
+                        <strong>Pedido #${pedido.id}</strong>
+                        <span class="text-muted">${dataHora}</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-1"><strong>Cliente:</strong> ${pedido.cliente_nome}</p>
+                        <p class="mb-1"><strong>Endereço:</strong> ${pedido.tipo_entrega === 'delivery' ? pedido.cliente_endereco : 'Retirada no Balcão'}</p>
+                        <hr>
+                        <h6>Itens:</h6>
+                        ${itensHtml}
+                    </div>
+                    <div class="card-footer text-end">
+                        <strong>Total: ${valorTotal}</strong>
+                    </div>
+                `;
+                containers.pedidos.appendChild(card);
+            });
         }
-        const table = document.createElement('table');
-        table.className = 'table table-hover align-middle';
-        table.innerHTML = `
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Categoria</th>
-                    <th>Preço Base</th>
-                    <th class="text-end">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${produtos.map(p => `
-                    <tr data-produto='${JSON.stringify(p)}'>
-                        <td>${p.nome}</td>
-                        <td>${p.categorias.nome}</td>
-                        <td>${parseFloat(p.preco_base).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-outline-primary btn-acao btn-editar-produto"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-sm btn-outline-danger btn-acao btn-excluir-produto" data-id="${p.id}"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        `;
-        containers.produtos.innerHTML = '';
-        containers.produtos.appendChild(table);
-    }
-    
-    // --- LÓGICA DE CATEGORIAS ---
-    async function carregarCategorias() {
-        containers.categorias.innerHTML = '<p>Carregando categorias...</p>';
-        const categorias = await apiRequest('/api/categorias');
-         if (!categorias) {
-            containers.categorias.innerHTML = '<p class="text-danger">Não foi possível carregar as categorias.</p>';
-            return;
-        }
-        const table = document.createElement('table');
-        table.className = 'table table-hover';
-        table.innerHTML = `
-            <thead><tr><th>ID</th><th>Nome</th><th>Ordem de Exibição</th></tr></thead>
-            <tbody>
-                ${categorias.map(c => `<tr><td>${c.id}</td><td>${c.nome}</td><td>${c.ordem}</td></tr>`).join('')}
-            </tbody>
-        `;
-        containers.categorias.innerHTML = '';
-        containers.categorias.appendChild(table);
-    }
-
-    // --- LÓGICA DE INGREDIENTES / ESTOQUE ---
-    async function carregarIngredientes() {
-        containers.ingredientes.innerHTML = '<p>Carregando ingredientes...</p>';
-        const ingredientes = await apiRequest('/api/ingredientes');
-        if (!ingredientes) {
-            containers.ingredientes.innerHTML = '<p class="text-danger">Não foi possível carregar os ingredientes.</p>';
-            return;
-        }
-        const table = document.createElement('table');
-        table.className = 'table table-hover';
-        table.innerHTML = `
-            <thead><tr><th>Nome</th><th>Unidade</th><th>Estoque</th><th>É Adicional?</th><th>Preço Adicional</th></tr></thead>
-            <tbody>
-                ${ingredientes.map(i => `
+        
+        async function carregarProdutos() {
+            containers.produtos.innerHTML = '<p>Carregando produtos...</p>';
+            const produtos = await apiRequest('/api/produtos');
+             if (!produtos) {
+                containers.produtos.innerHTML = '<p class="text-danger">Não foi possível carregar os produtos.</p>';
+                return;
+            }
+            const table = document.createElement('table');
+            table.className = 'table table-hover align-middle';
+            table.innerHTML = `
+                <thead>
                     <tr>
-                        <td>${i.nome}</td>
-                        <td>${i.unidade || 'N/A'}</td>
-                        <td>${i.quantidade_estoque}</td>
-                        <td>${i.pode_ser_adicional ? '<span class="badge bg-success">Sim</span>' : '<span class="badge bg-secondary">Não</span>'}</td>
-                        <td>${i.pode_ser_adicional ? parseFloat(i.preco_adicional).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</td>
+                        <th>Nome</th>
+                        <th>Categoria</th>
+                        <th>Preço Base</th>
+                        <th class="text-end">Ações</th>
                     </tr>
-                `).join('')}
-            </tbody>
-        `;
-        containers.ingredientes.innerHTML = '';
-        containers.ingredientes.appendChild(table);
-    }
-    
-    // --- MANIPULAÇÃO DO MODAL DE PRODUTO ---
-    async function abrirModalProduto(produto = null) {
-        document.getElementById('form-produto').reset();
-        const selectCategoria = document.getElementById('produto-categoria');
-        selectCategoria.innerHTML = '<option>Carregando...</option>';
-        const categorias = await apiRequest('/api/categorias');
-        if (categorias) {
-            selectCategoria.innerHTML = categorias.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+                </thead>
+                <tbody>
+                    ${produtos.map(p => `
+                        <tr data-produto='${JSON.stringify(p)}'>
+                            <td>${p.nome}</td>
+                            <td>${p.categorias.nome}</td>
+                            <td>${parseFloat(p.preco_base).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-primary btn-acao btn-editar-produto"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-sm btn-outline-danger btn-acao btn-excluir-produto" data-id="${p.id}"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+            containers.produtos.innerHTML = '';
+            containers.produtos.appendChild(table);
         }
-
-        if (produto) { // Modo Edição
-            document.getElementById('modalProdutoTitle').textContent = 'Editar Produto';
-            document.getElementById('produto-id').value = produto.id;
-            document.getElementById('produto-nome').value = produto.nome;
-            document.getElementById('produto-descricao').value = produto.descricao;
-            document.getElementById('produto-preco').value = produto.preco_base;
-            document.getElementById('produto-categoria').value = produto.categoria_id;
-            document.getElementById('produto-imagem').value = produto.imagem_url;
-        } else { // Modo Adição
-            document.getElementById('modalProdutoTitle').textContent = 'Adicionar Produto';
-            document.getElementById('produto-id').value = '';
-        }
-        modalProduto.show();
-    }
-    
-    // --- EVENTOS DE CRUD (Criar, Ler, Atualizar, Apagar) ---
-    
-    // SUBMISSÃO DO FORMULÁRIO DE PRODUTO (CRIAR/ATUALIZAR)
-    document.getElementById('form-produto').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const id = document.getElementById('produto-id').value;
-        const produto = {
-            nome: document.getElementById('produto-nome').value,
-            descricao: document.getElementById('produto-descricao').value,
-            preco_base: parseFloat(document.getElementById('produto-preco').value),
-            categoria_id: parseInt(document.getElementById('produto-categoria').value),
-            imagem_url: document.getElementById('produto-imagem').value,
-        };
         
-        let resultado;
-        if (id) { // Atualizar (PUT)
-            resultado = await apiRequest(`/api/produtos/${id}`, 'PUT', produto);
-        } else { // Criar (POST)
-            resultado = await apiRequest('/api/produtos', 'POST', produto);
+        async function carregarCategorias() {
+            containers.categorias.innerHTML = '<p>Carregando categorias...</p>';
+            const categorias = await apiRequest('/api/categorias');
+             if (!categorias) {
+                containers.categorias.innerHTML = '<p class="text-danger">Não foi possível carregar as categorias.</p>';
+                return;
+            }
+            const table = document.createElement('table');
+            table.className = 'table table-hover';
+            table.innerHTML = `
+                <thead><tr><th>ID</th><th>Nome</th><th>Ordem de Exibição</th></tr></thead>
+                <tbody>
+                    ${categorias.map(c => `<tr><td>${c.id}</td><td>${c.nome}</td><td>${c.ordem}</td></tr>`).join('')}
+                </tbody>
+            `;
+            containers.categorias.innerHTML = '';
+            containers.categorias.appendChild(table);
         }
 
-        if (resultado) {
-            modalProduto.hide();
-            carregarProdutos(); // Recarrega a lista
+        async function carregarIngredientes() {
+            containers.ingredientes.innerHTML = '<p>Carregando ingredientes...</p>';
+            const ingredientes = await apiRequest('/api/ingredientes');
+            if (!ingredientes) {
+                containers.ingredientes.innerHTML = '<p class="text-danger">Não foi possível carregar os ingredientes.</p>';
+                return;
+            }
+            const table = document.createElement('table');
+            table.className = 'table table-hover align-middle';
+            table.innerHTML = `
+                <thead><tr><th>Nome</th><th>Unidade</th><th>Estoque</th><th>É Adicional?</th><th>Preço Adicional</th><th class="text-end">Ações</th></tr></thead>
+                <tbody>
+                    ${ingredientes.map(i => `
+                        <tr>
+                            <td>${i.nome}</td>
+                            <td>${i.unidade || 'N/A'}</td>
+                            <td>${i.quantidade_estoque}</td>
+                            <td>${i.pode_ser_adicional ? '<span class="badge bg-success">Sim</span>' : '<span class="badge bg-secondary">Não</span>'}</td>
+                            <td>${i.pode_ser_adicional ? parseFloat(i.preco_adicional).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-secondary btn-acao btn-editar-estoque" data-id="${i.id}" data-nome="${i.nome}" data-estoque="${i.quantidade_estoque}"><i class="fas fa-edit"></i></button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+            containers.ingredientes.innerHTML = '';
+            containers.ingredientes.appendChild(table);
         }
-    });
-
-    // ADICIONAR CATEGORIA
-    document.getElementById('btn-adicionar-categoria').addEventListener('click', async () => {
-        const nome = prompt("Digite o nome da nova categoria:");
-        if (!nome) return;
-        const ordem = prompt("Digite a ordem de exibição (número):", "10");
-        if (!ordem) return;
-
-        const resultado = await apiRequest('/api/categorias', 'POST', { nome, ordem: parseInt(ordem) });
-        if (resultado) {
-            carregarCategorias();
-        }
-    });
-
-    // ADICIONAR INGREDIENTE
-    document.getElementById('btn-adicionar-ingrediente').addEventListener('click', async () => {
-        const nome = prompt("Digite o nome do novo ingrediente:");
-        if (!nome) return;
-        const unidade = prompt("Digite a unidade de medida (ex: 'g', 'un', 'fatia'):", "un");
-        if (!unidade) return;
-        const quantidade_estoque = prompt("Digite a quantidade inicial em estoque:", "0");
-
-        const resultado = await apiRequest('/api/ingredientes', 'POST', { nome, unidade, quantidade_estoque: parseInt(quantidade_estoque) });
-        if (resultado) {
-            carregarIngredientes();
-        }
-    });
-
-    // DELEGAÇÃO DE EVENTOS para botões de editar/excluir
-    document.body.addEventListener('click', async (e) => {
-        const btnEditar = e.target.closest('.btn-editar-produto');
-        const btnExcluir = e.target.closest('.btn-excluir-produto');
         
-        // ABRIR MODAL PARA EDITAR PRODUTO
-        if (btnEditar) {
-            const tr = btnEditar.closest('tr');
-            const produto = JSON.parse(tr.dataset.produto);
-            abrirModalProduto(produto);
-        }
+        async function abrirModalProduto(produto = null) {
+            document.getElementById('form-produto').reset();
+            const selectCategoria = document.getElementById('produto-categoria');
+            selectCategoria.innerHTML = '<option>Carregando...</option>';
+            const categorias = await apiRequest('/api/categorias');
+            if (categorias) {
+                selectCategoria.innerHTML = categorias.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+            }
 
-        // EXCLUIR PRODUTO
-        if (btnExcluir) {
-            const id = btnExcluir.dataset.id;
-            const nome = btnExcluir.closest('tr').cells[0].textContent;
-            if (confirm(`Tem certeza que deseja excluir o produto "${nome}"?`)) {
-                const resultado = await apiRequest(`/api/produtos/${id}`, 'DELETE');
-                // Mesmo que o resultado seja null (em caso de sucesso), a condição é implícita
-                // Se a requisição não falhar (não lançar erro), recarrega a lista
+            if (produto) { // Modo Edição
+                document.getElementById('modalProdutoTitle').textContent = 'Editar Produto';
+                document.getElementById('produto-id').value = produto.id;
+                document.getElementById('produto-nome').value = produto.nome;
+                document.getElementById('produto-descricao').value = produto.descricao;
+                document.getElementById('produto-preco').value = produto.preco_base;
+                document.getElementById('produto-categoria').value = produto.categorias.id;
+                document.getElementById('produto-imagem').value = produto.imagem_url;
+            } else { // Modo Adição
+                document.getElementById('modalProdutoTitle').textContent = 'Adicionar Produto';
+                document.getElementById('produto-id').value = '';
+            }
+            modalProduto.show();
+        }
+        
+        document.getElementById('form-produto').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('produto-id').value;
+            const produto = {
+                nome: document.getElementById('produto-nome').value,
+                descricao: document.getElementById('produto-descricao').value,
+                preco_base: parseFloat(document.getElementById('produto-preco').value),
+                categoria_id: parseInt(document.getElementById('produto-categoria').value),
+                imagem_url: document.getElementById('produto-imagem').value,
+            };
+            
+            const resultado = id
+                ? await apiRequest(`/api/produtos/${id}`, 'PUT', produto)
+                : await apiRequest('/api/produtos', 'POST', produto);
+
+            if (resultado !== null) {
+                modalProduto.hide();
                 carregarProdutos();
             }
-        }
+        });
+
+        document.getElementById('btn-adicionar-categoria').addEventListener('click', async () => {
+            const nome = prompt("Digite o nome da nova categoria:");
+            if (!nome) return;
+            const ordem = prompt("Digite a ordem de exibição (número):", "10");
+            if (ordem === null) return;
+
+            const resultado = await apiRequest('/api/categorias', 'POST', { nome, ordem: parseInt(ordem) });
+            if (resultado) carregarCategorias();
+        });
+
+        document.getElementById('btn-adicionar-ingrediente').addEventListener('click', async () => {
+            const nome = prompt("Digite o nome do novo ingrediente:");
+            if (!nome) return;
+            const unidade = prompt("Digite a unidade de medida (ex: 'g', 'un', 'fatia'):", "un");
+            if (unidade === null) return;
+            const quantidade_estoque = prompt("Digite a quantidade inicial em estoque:", "0");
+
+            const resultado = await apiRequest('/api/ingredientes', 'POST', { nome, unidade, quantidade_estoque: parseInt(quantidade_estoque) });
+            if (resultado) carregarIngredientes();
+        });
+
+        document.body.addEventListener('click', async (e) => {
+            const btnEditarProduto = e.target.closest('.btn-editar-produto');
+            const btnExcluirProduto = e.target.closest('.btn-excluir-produto');
+            const btnEditarEstoque = e.target.closest('.btn-editar-estoque');
+            
+            if (btnEditarProduto) {
+                const tr = btnEditarProduto.closest('tr');
+                const produto = JSON.parse(tr.dataset.produto);
+                abrirModalProduto(produto);
+            }
+
+            if (btnExcluirProduto) {
+                const id = btnExcluirProduto.dataset.id;
+                const nome = btnExcluirProduto.closest('tr').cells[0].textContent;
+                if (confirm(`Tem certeza que deseja excluir o produto "${nome}"?`)) {
+                    await apiRequest(`/api/produtos/${id}`, 'DELETE');
+                    carregarProdutos();
+                }
+            }
+
+            if(btnEditarEstoque) {
+                const id = btnEditarEstoque.dataset.id;
+                const nome = btnEditarEstoque.dataset.nome;
+                const estoqueAtual = btnEditarEstoque.dataset.estoque;
+                const novoEstoque = prompt(`Digite o novo valor do estoque para "${nome}":`, estoqueAtual);
+
+                if(novoEstoque !== null && !isNaN(novoEstoque)) {
+                    const resultado = await apiRequest(`/api/ingredientes/${id}`, 'PUT', { quantidade_estoque: parseInt(novoEstoque) });
+                    if(resultado) carregarIngredientes();
+                }
+            }
+        });
+
+        carregarPedidos();
+        document.getElementById('btn-adicionar-produto').addEventListener('click', () => abrirModalProduto());
+        
+        document.getElementById('pedidos-tab').addEventListener('shown.bs.tab', carregarPedidos);
+        document.getElementById('produtos-tab').addEventListener('shown.bs.tab', carregarProdutos);
+        document.getElementById('categorias-tab').addEventListener('shown.bs.tab', carregarCategorias);
+        document.getElementById('ingredientes-tab').addEventListener('shown.bs.tab', carregarIngredientes);
+
+        document.getElementById('btn-recarregar-pedidos').addEventListener('click', carregarPedidos);
     });
-
-    // --- INICIALIZAÇÃO E EVENTOS DE ABAS ---
-    
-    // Carrega a aba ativa na primeira vez
-    carregarPedidos();
-    document.getElementById('btn-adicionar-produto').addEventListener('click', () => abrirModalProduto());
-    
-    // Eventos para carregar dados ao trocar de aba
-    document.getElementById('pedidos-tab').addEventListener('shown.bs.tab', carregarPedidos);
-    document.getElementById('produtos-tab').addEventListener('shown.bs.tab', carregarProdutos);
-    document.getElementById('categorias-tab').addEventListener('shown.bs.tab', carregarCategorias);
-    document.getElementById('ingredientes-tab').addEventListener('shown.bs.tab', carregarIngredientes);
-
-    // Evento de recarregar pedidos
-    document.getElementById('btn-recarregar-pedidos').addEventListener('click', carregarPedidos);
-});
-</script>
-    </body>
+    </script>
+</body>
 </html>
-
