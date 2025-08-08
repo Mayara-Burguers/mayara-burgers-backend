@@ -1,7 +1,8 @@
 /*
 ============================================================
 | JAVASCRIPT FINAL E COMPLETO - MAYARA BURGUER'S           |
-| Adicionais carregados via API e lógica do modal corrigida.|
+| Versão com ID do produto adicionado ao carrinho para     |
+| controle de estoque automático.                          |
 ============================================================
 */
 document.addEventListener("DOMContentLoaded", async () => {
@@ -16,7 +17,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Variáveis globais para guardar os dados vindos do servidor
     let todosOsProdutos = [];
-    let listaDeAdicionais = []; // A lista agora virá da API
+    let listaDeAdicionais = [];
 
     // 2. DELEGAÇÃO DE EVENTOS
     menuContainer.addEventListener('click', (e) => {
@@ -31,7 +32,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (btnSimpleAdd) {
             const itemData = JSON.parse(btnSimpleAdd.dataset.item);
-            adicionarAoCarrinho({ name: itemData.nome, price: itemData.preco, quantity: 1, extras: [], notes: '' });
+            // Adiciona o item simples ao carrinho (já com o ID)
+            adicionarAoCarrinho({ id: itemData.id, name: itemData.nome, price: itemData.preco, quantity: 1, extras: [], notes: '' });
         }
     });
 
@@ -138,8 +140,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     function criarCardProduto(produto) {
         const nomeCategoria = produto.categorias ? produto.categorias.nome : '';
 
-       const buttonHtml = nomeCategoria === 'Bebidas'
-    ? `<button class="btn btn-sm btn-orange simple-add-btn" data-item='${JSON.stringify({ id: produto.id, nome: produto.nome, preco: produto.preco_base })}'>Adicionar</button>`
+        // ALTERAÇÃO AQUI: Adicionado 'id: produto.id' ao JSON do data-item
+        const buttonHtml = (nomeCategoria === 'Bebidas' || !produto.categorias.permite_adicionais)
+            ? `<button class="btn btn-sm btn-orange simple-add-btn" data-item='${JSON.stringify({ id: produto.id, nome: produto.nome, preco: produto.preco_base })}'>Adicionar</button>`
             : `<button class="btn btn-sm btn-orange btn-personalize" data-product-id="${produto.id}"><i class="fas fa-utensils"></i> Personalizar</button>`;
         
         return `<div class="col-md-6 col-lg-4"><div class="card item h-100"><img src="${produto.imagem_url || 'placeholder.jpg'}" class="card-img-top" alt="${produto.nome}"><div class="card-body d-flex flex-column"><h3 class="card-title">${produto.nome}</h3><p class="card-text">${produto.descricao || ''}</p><div class="d-flex justify-content-between align-items-center mt-auto"><span class="price">${parseFloat(produto.preco_base).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>${buttonHtml}</div></div></div></div>`;
@@ -149,6 +152,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     function preencherEabrirModal(produto) {
         const modalBody = modalGenericoEl.querySelector('.modal-body');
         modalGenericoEl.querySelector('.nome-lanche').textContent = produto.nome;
+        
+        // ALTERAÇÃO AQUI: Armazena o ID do produto no modal para uso posterior
+        modalGenericoEl.dataset.produtoId = produto.id; 
         
         const categoriaInfo = produto.categorias;
         
@@ -168,7 +174,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         
         let htmlObservacoes = `<div class="option-group"><div class="option-title"><i class="fas fa-edit"></i> Observações</div><textarea class="observacoes-textarea form-control" placeholder="Ex: Sem cebola..."></textarea></div>`;
         
-        modalBody.innerHTML = htmlPao + htmlAdicionais + htmlObservacoes + `<div class="current-price">Total: R$ <span class="preco-final">0,00</span></div>`;
+        modalBody.innerHTML = htmlPao + htmlAdicionais + htmlObservacoes + `<div class="current-price">Total: <span class="preco-final">0,00</span></div>`;
         
         if (!htmlPao) {
             modalGenericoEl.dataset.baseprice = produto.preco_base;
@@ -228,7 +234,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         modal.querySelectorAll('.adicional-item').forEach(item => {
              total += (parseInt(item.querySelector('.adicional-quantidade').value) || 0) * (parseFloat(item.querySelector('.adicional-quantidade').dataset.price) || 0);
         });
-        modal.querySelector('.preco-final').textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const precoFinalEl = modal.querySelector('.preco-final');
+        if (precoFinalEl) {
+           precoFinalEl.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
     }
 
     // 5. GESTÃO DO CARRINHO
@@ -240,16 +249,23 @@ document.addEventListener("DOMContentLoaded", async () => {
         renderizarCarrinho();
     }
     
+    // ALTERAÇÃO AQUI: Pega o ID do produto e adiciona ao objeto do carrinho
     document.querySelector('#modalGenerico .btn-add-custom').addEventListener('click', function () {
         const modal = this.closest('.modal-personalizacao');
+        const produtoId = parseInt(modalGenericoEl.dataset.produtoId); 
+        
         const nomeProduto = modal.querySelector('.nome-lanche').textContent.trim();
-        const preco = parseFloat(modal.querySelector('.preco-final').textContent.replace(/[^\d,]/g, '').replace(',', '.'));
+        const precoText = modal.querySelector('.preco-final').textContent;
+        const preco = parseFloat(precoText.replace('R$', '').replace('.', '').replace(',', '.').trim());
+
         const paoEl = modal.querySelector('input[name="paoGenerico"]:checked');
         const pao = paoEl ? paoEl.dataset.nome : 'Padrão';
         const adicionais = Array.from(modal.querySelectorAll('.adicional-quantidade')).filter(i => i.value > 0).map(i => `${i.value}x ${i.dataset.nome}`);
         const observacoesTextarea = modal.querySelector('.observacoes-textarea');
         const notes = observacoesTextarea ? observacoesTextarea.value.trim() : '';
-        adicionarAoCarrinho({ name: nomeProduto, bread: pao, extras: adicionais, notes, quantity: 1, price: preco });
+        
+        adicionarAoCarrinho({ id: produtoId, name: nomeProduto, bread: pao, extras: adicionais, notes, quantity: 1, price: preco });
+        
         modalGenerico.hide();
     });
     
@@ -299,7 +315,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 6. GESTÃO DE CLIENTE E FINALIZAÇÃO
     (function setupFinalizacao() {
         const modalClienteEl = document.getElementById("modalDadosCliente");
-        if (!modalClienteEl) return; // Sai se o modal de cliente não existir
+        if (!modalClienteEl) return;
         const modalCliente = new bootstrap.Modal(modalClienteEl);
         const deliveryRadio = document.getElementById("entregaDelivery");
         const retiradaRadio = document.getElementById("entregaRetirada");
@@ -404,7 +420,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
                 
                 const resultado = await response.json();
-                alert(`Seu pedido Nº ${resultado.pedidoId} foi recebido!`);
+                alert(`Seu pedido Nº ${resultado.pedidoId} foi recebido! Agora vamos te redirecionar ao WhatsApp para confirmar.`);
 
                 const dataHora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
                 let mensagemWhats = `*Novo Pedido: Nº ${resultado.pedidoId}*%0A*Data/Hora:* ${dataHora}%0A%0A*Cliente:* ${pedidoParaEnviar.cliente_nome}%0A`;
@@ -429,7 +445,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                 
                 window.open("https://wa.me/5512992050080?text=" + mensagemWhats, '_blank');
                 
-                localStorage.clear(); // Limpa tudo relacionado ao pedido
+                // Limpa o localStorage para um novo pedido
+                localStorage.removeItem("cart");
+                localStorage.removeItem("sachesAlho");
+                localStorage.removeItem("molhoKetchup");
+                localStorage.removeItem("molhoMostarda");
+                localStorage.removeItem("molhoMaionese");
+                
                 if(incluirMolhosCheckbox) incluirMolhosCheckbox.checked = false;
                 if(opcoesMolhosIndividuais) opcoesMolhosIndividuais.style.display = 'none';
                 document.querySelectorAll('#opcoesMolhosIndividuais input').forEach(c => c.checked = false);
@@ -463,4 +485,3 @@ document.addEventListener("DOMContentLoaded", async () => {
     carregarDadosIniciais();
     renderizarCarrinho();
 });
-
