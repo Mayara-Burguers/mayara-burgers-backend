@@ -81,123 +81,114 @@
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // URL base do seu servidor backend. Altere se necessário.
-            const BASE_URL = 'https://mayara-backend-servidor.onrender.com';
-            
-            // Mapeamento dos elementos HTML que serão manipulados
-            const pedidosContainer = document.getElementById('pedidos-container');
-            const btnRecarregar = document.getElementById('btn-recarregar');
+    document.addEventListener('DOMContentLoaded', () => {
+        const BASE_URL = 'https://mayara-backend-servidor.onrender.com';
+        const pedidosContainer = document.getElementById('pedidos-container');
+        const btnRecarregar = document.getElementById('btn-recarregar');
 
-            /**
-             * Função principal para buscar e renderizar os pedidos.
-             * Inclui tratamento robusto de erros de rede e de servidor.
-             */
-            async function carregarPedidos() {
-                pedidosContainer.innerHTML = '<p class="text-center">Buscando novos pedidos...</p>';
+        // --- INÍCIO DA SEÇÃO DE DEPURAÇÃO ---
+        console.log("Script de admin inicializado.");
 
-                try {
-                    const response = await fetch(`${BASE_URL}/api/pedidos`);
+        if (!pedidosContainer) {
+            console.error("ERRO CRÍTICO: O elemento com ID #pedidos-container não foi encontrado no HTML. A renderização é impossível.");
+            return;
+        }
+        console.log("Elemento #pedidos-container encontrado com sucesso.");
+        // --- FIM DA SEÇÃO DE DEPURAÇÃO ---
 
-                    // VERIFICAÇÃO ESSENCIAL: Checa se a resposta da requisição foi bem-sucedida (status entre 200 e 299).
-                    if (!response.ok) {
-                        // Se a resposta for um erro (como 429 ou 500), lança um novo erro para ser capturado pelo bloco 'catch'.
-                        throw new Error(`Erro do servidor: ${response.status} - ${response.statusText}`);
-                    }
-
-                    // Tenta converter o corpo da resposta para o formato JSON.
-                    const pedidos = await response.json();
-                    
-                    // Se a conversão for bem-sucedida, chama a função para renderizar os dados na tela.
-                    renderizarPedidos(pedidos);
-
-                } catch (error) {
-                    console.error("Falha ao buscar ou processar os pedidos:", error);
-                    
-                    // Em caso de qualquer erro na busca ou processamento, exibe uma mensagem amigável na tela.
-                    pedidosContainer.innerHTML = `
-                        <div class="alert alert-danger text-center">
-                            <strong>Ops! Falha ao carregar os pedidos.</strong>
-                            <p>Pode ser um problema de conexão ou o servidor está ocupado. Tente recarregar.</p>
-                            <p class="small mb-0">Detalhe do erro: ${error.message}</p>
-                        </div>`;
+        async function carregarPedidos() {
+            pedidosContainer.innerHTML = '<p class="text-center">Buscando novos pedidos...</p>';
+            try {
+                const response = await fetch(`${BASE_URL}/api/pedidos`);
+                if (!response.ok) {
+                    throw new Error(`Erro do servidor: ${response.status} - ${response.statusText}`);
                 }
+                const pedidos = await response.json();
+                renderizarPedidos(pedidos);
+            } catch (error) {
+                console.error("Falha ao buscar ou processar os pedidos:", error);
+                pedidosContainer.innerHTML = `
+                    <div class="alert alert-danger text-center">
+                        <strong>Ops! Falha ao carregar os pedidos.</strong>
+                        <p>Pode ser um problema de conexão ou o servidor está ocupado. Tente recarregar.</p>
+                        <p class="small mb-0">Detalhe do erro: ${error.message}</p>
+                    </div>`;
+            }
+        }
+
+        function renderizarPedidos(pedidos) {
+            // --- INÍCIO DA SEÇÃO DE DEPURAÇÃO ---
+            console.log("Função renderizarPedidos foi chamada.");
+            console.log("Dados recebidos para renderização:", pedidos); // MOSTRA A ESTRUTURA COMPLETA DOS DADOS
+
+            if (!Array.isArray(pedidos)) {
+                console.error("ERRO DE TIPO: Os dados recebidos não são uma lista (array). A renderização foi interrompida.");
+                return;
+            }
+            // --- FIM DA SEÇÃO DE DEPURAÇÃO ---
+
+            pedidosContainer.innerHTML = '';
+            if (pedidos.length === 0) {
+                pedidosContainer.innerHTML = '<p class="text-center text-muted">Nenhum pedido encontrado no histórico.</p>';
+                return;
             }
 
-            /**
-             * Função responsável por receber uma lista (array) de objetos de pedido e transformá-la em elementos HTML.
-             * @param {Array} pedidos - A lista de pedidos que foi recebida da API.
-             */
-            function renderizarPedidos(pedidos) {
-                // Primeiro, limpa qualquer conteúdo existente no container.
-                pedidosContainer.innerHTML = '';
+            pedidos.forEach((pedido, index) => {
+                // --- INÍCIO DA SEÇÃO DE DEPURAÇÃO ---
+                console.log(`--- Processando Pedido #${index + 1} ---`);
+                console.log("Objeto do pedido:", pedido); // MOSTRA CADA PEDIDO INDIVIDUALMENTE
+                console.log("Verificando itens:", pedido.itens_do_pedido); // MOSTRA A ESTRUTURA DOS ITENS
+                // --- FIM DA SEÇÃO DE DEPURAÇÃO ---
 
-                // Se a lista de pedidos não existir ou estiver vazia, exibe uma mensagem informativa.
-                if (!pedidos || pedidos.length === 0) {
-                    pedidosContainer.innerHTML = '<p class="text-center text-muted">Nenhum pedido encontrado no histórico.</p>';
-                    return; // Encerra a execução da função, pois não há nada a renderizar.
+                const dataHora = new Date(pedido.data_hora).toLocaleString('pt-BR');
+                const valorTotal = parseFloat(pedido.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                let itensHtml = '';
+
+                if (pedido.itens_do_pedido && pedido.itens_do_pedido.length > 0) {
+                    pedido.itens_do_pedido.forEach(item => {
+                        itensHtml += `
+                            <li>
+                                <strong>${item.quantidade}x ${item.nome_produto}</strong>
+                                <div class="item-detalhes">
+                                    ${item.observacoes ? `<div><em>Obs: ${item.observacoes}</em></div>` : ''}
+                                </div>
+                            </li>`;
+                    });
+                } else {
+                    itensHtml = '<li>Nenhum item detalhado neste pedido.</li>';
                 }
 
-                // Utiliza o método 'forEach' para iterar sobre cada objeto 'pedido' dentro da lista 'pedidos'.
-                pedidos.forEach(pedido => {
-                    // Formata a data e hora para o padrão brasileiro (dd/mm/aaaa, hh:mm:ss).
-                    const dataHora = new Date(pedido.data_hora).toLocaleString('pt-BR');
+                const pedidoCard = document.createElement('div');
+                pedidoCard.className = 'pedido';
+                pedidoCard.innerHTML = `
+                    <div class="pedido-header d-flex justify-content-between">
+                        <span>Pedido #${pedido.id}</span>
+                        <span>${dataHora}</span>
+                    </div>
+                    <div class="pedido-body">
+                        <p><strong>Cliente:</strong> ${pedido.cliente_nome}</p>
+                        <p><strong>Telefone:</strong> ${pedido.cliente_telefone}</p>
+                        <p><strong>Entrega:</strong> ${pedido.tipo_entrega === 'delivery' ? `Delivery - ${pedido.cliente_endereco}` : 'Retirada no Local'}</p>
+                        <h6>Itens:</h6>
+                        <ul>
+                            ${itensHtml}
+                        </ul>
+                    </div>
+                    <div class="pedido-footer">
+                        <span>Total: ${valorTotal}</span>
+                    </div>
+                `;
+                pedidosContainer.appendChild(pedidoCard);
+            });
+             // --- INÍCIO DA SEÇÃO DE DEPURAÇÃO ---
+            console.log("Renderização concluída com sucesso!");
+            // --- FIM DA SEÇÃO DE DEPURAÇÃO ---
+        }
 
-                    // Formata o valor total para a moeda brasileira (Reais - BRL).
-                    const valorTotal = parseFloat(pedido.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-                    let itensHtml = '';
-                    // Verifica se o pedido possui a lista de itens e se ela não está vazia.
-                    if (pedido.itens_do_pedido && pedido.itens_do_pedido.length > 0) {
-                        pedido.itens_do_pedido.forEach(item => {
-                            // Constrói a string HTML para cada item do pedido.
-                            itensHtml += `
-                                <li>
-                                    <strong>${item.quantidade}x ${item.nome_produto}</strong>
-                                    <div class="item-detalhes">
-                                        ${item.observacoes ? `<div><em>Obs: ${item.observacoes}</em></div>` : ''}
-                                    </div>
-                                </li>`;
-                        });
-                    } else {
-                        itensHtml = '<li>Nenhum item detalhado foi registrado para este pedido.</li>';
-                    }
-
-                    // Cria um novo elemento 'div' que representará o card do pedido.
-                    const pedidoCard = document.createElement('div');
-                    pedidoCard.className = 'pedido'; // Adiciona a classe CSS para estilização.
-                    
-                    // Define o conteúdo HTML interno do card do pedido, usando os dados formatados.
-                    pedidoCard.innerHTML = `
-                        <div class="pedido-header d-flex justify-content-between">
-                            <span>Pedido #${pedido.id}</span>
-                            <span>${dataHora}</span>
-                        </div>
-                        <div class="pedido-body">
-                            <p><strong>Cliente:</strong> ${pedido.cliente_nome}</p>
-                            <p><strong>Telefone:</strong> ${pedido.cliente_telefone}</p>
-                            <p><strong>Entrega:</strong> ${pedido.tipo_entrega === 'delivery' ? `Delivery - ${pedido.cliente_endereco}` : 'Retirada no Local'}</p>
-                            <h6>Itens:</h6>
-                            <ul>
-                                ${itensHtml}
-                            </ul>
-                        </div>
-                        <div class="pedido-footer">
-                            <span>Total: ${valorTotal}</span>
-                        </div>
-                    `;
-                    
-                    // Adiciona o card recém-criado como um filho do container principal na página.
-                    pedidosContainer.appendChild(pedidoCard);
-                });
-            }
-
-            // Adiciona um "ouvinte" de eventos para o clique no botão de recarregar.
-            btnRecarregar.addEventListener('click', carregarPedidos);
-
-            // Chama a função para carregar os pedidos pela primeira vez, assim que a página é aberta.
-            carregarPedidos();
-        });
-    </script>
+        btnRecarregar.addEventListener('click', carregarPedidos);
+        carregarPedidos();
+    });
+</script>
     </body>
 </html>
+
