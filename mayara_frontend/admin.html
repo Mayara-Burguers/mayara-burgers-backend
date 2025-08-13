@@ -34,7 +34,7 @@
         <div class="tab-content" id="adminTabContent">
             <div class="tab-pane fade show active" id="pedidos-pane" role="tabpanel">
                 <div class="p-3">
-                    <div class="d-flex justify-content-between align-items:center mb-3"><h2 class="h4">Histórico de Pedidos</h2><button id="btn-recarregar-pedidos" class="btn btn-sm btn-outline-primary"><i class="fas fa-sync-alt"></i> Recarregar</button></div>
+                    <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h4">Histórico de Pedidos</h2><button id="btn-recarregar-pedidos" class="btn btn-sm btn-outline-primary"><i class="fas fa-sync-alt"></i> Recarregar</button></div>
                     <div id="pedidos-container"></div>
                 </div>
             </div>
@@ -125,8 +125,8 @@
             ingredientesPreparo: document.getElementById('ingredientes-preparo-container')
         };
 
-        let todosOsIngredientes = [], todosOsProdutos = [], todasAsCategorias = [], todosOsGruposOpcoes = [];
-        let receitaEmEdicao = [], produtoSelecionadoParaReceita = null;
+        let receitaEmEdicao = [], todosOsIngredientes = [], todosOsProdutos = [], todasAsCategorias = [], todosOsGruposOpcoes = [];
+        let produtoSelecionadoParaReceita = null;
         
         async function apiRequest(endpoint, method = 'GET', body = null) {
             const options = { method, headers: { 'Content-Type': 'application/json' } };
@@ -231,45 +231,21 @@
         async function carregarGruposOpcoes() {
             const accordionContainer = document.getElementById('grupos-opcoes-accordion');
             accordionContainer.innerHTML = '<p>Carregando...</p>';
-            
             if (todosOsGruposOpcoes.length === 0) {
                 accordionContainer.innerHTML = '<p class="text-muted">Nenhum grupo de opções criado.</p>';
                 return;
             }
-
             accordionContainer.innerHTML = todosOsGruposOpcoes.map((grupo, index) => `
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="heading-${index}">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${index}">
-                            ${grupo.nome}
-                        </button>
-                    </h2>
-                    <div id="collapse-${index}" class="accordion-collapse collapse" data-bs-parent="#grupos-opcoes-accordion">
-                        <div class="accordion-body">
-                            <button class="btn btn-sm btn-outline-danger float-end btn-excluir-grupo" data-id="${grupo.id}">Excluir Grupo</button>
-                            <strong>Opções:</strong>
-                            <ul class="list-unstyled mt-2 lista-opcoes-grupo">
-                                ${grupo.opcoes.map(opt => `<li><span>${opt.nome}</span><button class="btn btn-sm btn-danger btn-excluir-opcao" data-id="${opt.id}"><i class="fas fa-times"></i></button></li>`).join('')}
-                            </ul>
-                            <div class="input-group mt-3">
-                                <input type="text" class="form-control input-nova-opcao" placeholder="Nome da nova opção">
-                                <button class="btn btn-primary btn-add-nova-opcao" data-grupo-id="${grupo.id}">Adicionar Opção</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+                <div class="accordion-item"><h2 class="accordion-header" id="heading-${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${index}">${grupo.nome}</button></h2><div id="collapse-${index}" class="accordion-collapse collapse" data-bs-parent="#grupos-opcoes-accordion"><div class="accordion-body"><button class="btn btn-sm btn-outline-danger float-end btn-excluir-grupo" data-id="${grupo.id}">Excluir Grupo</button><strong>Opções:</strong><ul class="list-unstyled mt-2 lista-opcoes-grupo">${grupo.opcoes.map(opt => `<li><span>${opt.nome}</span><button class="btn btn-sm btn-danger btn-excluir-opcao" data-id="${opt.id}"><i class="fas fa-times"></i></button></li>`).join('')}</ul><div class="input-group mt-3"><input type="text" class="form-control input-nova-opcao" placeholder="Nome da nova opção"><button class="btn btn-primary btn-add-nova-opcao" data-grupo-id="${grupo.id}">Adicionar Opção</button></div></div></div></div>`).join('');
         }
         
         async function abrirModalProduto(produto = null) {
             document.getElementById('form-produto').reset();
             const selectCategoria = document.getElementById('produto-categoria');
-            
             selectCategoria.innerHTML = '<option value="">Selecione...</option>';
             todasAsCategorias.forEach(c => {
                 selectCategoria.innerHTML += `<option value="${c.id}" data-grupo-id="${c.grupo_opcoes_id || ''}">${c.nome}</option>`;
             });
-
             if (produto) {
                 document.getElementById('modalProdutoTitle').textContent = 'Editar Produto';
                 document.getElementById('produto-id').value = produto.id;
@@ -292,10 +268,8 @@
             container.innerHTML = '';
             const categoria = todasAsCategorias.find(c => c.id == categoriaId);
             if (!categoria || !categoria.grupo_opcoes_id) return;
-            
             const grupo = todosOsGruposOpcoes.find(g => g.id == categoria.grupo_opcoes_id);
             if (!grupo) return;
-            
             let precosSalvos = {};
             if (produtoId) {
                 const produtoComOpcoes = await apiRequest(`/api/produtos/${produtoId}/opcoes`);
@@ -303,7 +277,6 @@
                     produtoComOpcoes.opcoes.forEach(opt => { precosSalvos[opt.id] = opt.preco; });
                 }
             }
-
             let html = `<hr class="my-4"><h6 class="mb-3">Preços para Opções de "${grupo.nome}"</h6>`;
             grupo.opcoes.forEach(opt => {
                 const preco = precosSalvos[opt.id] || '0.00';
@@ -320,7 +293,6 @@
             todosOsGruposOpcoes.forEach(g => {
                 selectGrupo.innerHTML += `<option value="${g.id}">${g.nome}</option>`;
             });
-
             if (categoria) {
                 document.getElementById('modalCategoriaTitle').textContent = 'Editar Categoria';
                 document.getElementById('categoria-id').value = categoria.id;
@@ -357,12 +329,10 @@
             modalIngrediente.show();
         }
 
-        // --- EVENT LISTENERS E FORM SUBMISSIONS ---
         document.getElementById('produto-categoria').addEventListener('change', (e) => {
             const produtoId = document.getElementById('produto-id').value;
             atualizarOpcoesProduto(e.target.value, produtoId || null);
         });
-        
         document.getElementById('ingrediente-pode-adicional').addEventListener('change',e=>{document.getElementById('campos-adicional').style.display=e.target.checked?'block':'none'});
         
         document.getElementById('form-produto').addEventListener('submit',async e=>{ e.preventDefault(); const id=document.getElementById('produto-id').value; let opcoes = []; document.querySelectorAll('#produto-opcoes-container input').forEach(input => {opcoes.push({opcao_id: parseInt(input.dataset.opcaoId),preco: parseFloat(input.value)})}); const p={nome:document.getElementById('produto-nome').value,descricao:document.getElementById('produto-descricao').value,preco_base:parseFloat(document.getElementById('produto-preco').value),categoria_id:parseInt(document.getElementById('produto-categoria').value),imagem_url:document.getElementById('produto-imagem').value,opcoes:opcoes}; const r=id?await apiRequest(`/api/produtos/${id}`,'PUT',p):await apiRequest('/api/produtos','POST',p); if(r){ modalProduto.hide(); await carregarDadosIniciais(); carregarProdutos(); } });
