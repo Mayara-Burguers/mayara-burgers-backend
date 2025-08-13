@@ -1,5 +1,3 @@
-
-
 /*
 ============================================================
 |        SERVIDOR BACK-END - MAYARA BURGUER'S              |
@@ -223,6 +221,7 @@ app.post('/api/opcoes', async (req, res) => {
 app.delete('/api/opcoes/:id', async (req, res) => {
     try {
         const { id } = req.params;
+        await supabase.from('produtos_opcoes').delete().eq('opcao_id', id);
         const { error } = await supabase.from('opcoes').delete().eq('id', id);
         if (error) throw error;
         res.status(204).send();
@@ -249,15 +248,117 @@ app.get('/api/produtos/:id/opcoes', async (req, res) => {
 
 
 // --- ROTAS DE PEDIDOS ---
-app.get('/api/pedidos', async (req, res) => { /* ...código sem alteração... */ });
-app.post('/api/pedidos', async (req, res) => { /* ...código sem alteração... */ });
+app.get('/api/pedidos', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('pedidos').select('*, itens_do_pedido(*)').order('data_hora', { ascending: false });
+        if (error) throw error;
+        res.status(200).json(data);
+    } catch (error) {
+        console.error('Erro ao buscar pedidos:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/pedidos', async (req, res) => {
+    try {
+        const dadosDoPedido = req.body;
+
+        if (!dadosDoPedido || !dadosDoPedido.itens || dadosDoPedido.itens.length === 0) {
+            return res.status(400).json({ error: 'O pedido está vazio ou é inválido.' });
+        }
+
+        const { data, error } = await supabase.rpc('processar_pedido', {
+            dados_pedido: dadosDoPedido
+        });
+
+        if (error) {
+            console.error('Erro retornado pelo RPC do Supabase:', error);
+            return res.status(400).json({ error: `Falha ao processar o pedido: ${error.message}` });
+        }
+
+        if (data && data.length > 0 && data[0].success) {
+            res.status(201).json({
+                message: data[0].message,
+                pedidoId: data[0].pedidoId
+            });
+        } else {
+            const errorMessage = (data && data.length > 0) ? data[0].message : 'Ocorreu um erro desconhecido no processamento.';
+            console.error('RPC falhou com a mensagem:', errorMessage);
+            res.status(400).json({ error: `Falha ao processar o pedido: ${errorMessage}` });
+        }
+    } catch (error) {
+        console.error('Erro inesperado na rota /api/pedidos:', error);
+        res.status(500).json({ error: 'Erro interno do servidor.' });
+    }
+});
+
 
 // --- ROTAS DE INGREDIENTES / ESTOQUE ---
-app.get('/api/ingredientes', async (req, res) => { /* ...código sem alteração... */ });
-app.get('/api/adicionais', async (req, res) => { /* ...código sem alteração... */ });
-app.post('/api/ingredientes', async (req, res) => { /* ...código sem alteração... */ });
-app.put('/api/ingredientes/:id', async (req, res) => { /* ...código sem alteração... */ });
-app.delete('/api/ingredientes/:id', async (req, res) => { /* ...código sem alteração... */ });
+app.get('/api/ingredientes', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('ingredientes').select('*').order('nome');
+        if (error) throw error;
+        res.status(200).json(data);
+    } catch (error) { 
+        console.error("Erro ao buscar ingredientes:", error);
+        res.status(500).json({ error: 'Erro interno do servidor' }); 
+    }
+});
+
+app.get('/api/adicionais', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('ingredientes').select('id, nome, preco_adicional').eq('pode_ser_adicional', true).order('nome');
+        if (error) throw error;
+        res.status(200).json(data);
+    } catch (error) { 
+        console.error("Erro ao buscar adicionais:", error);
+        res.status(500).json({ error: 'Erro interno do servidor' }); 
+    }
+});
+
+app.post('/api/ingredientes', async (req, res) => {
+    try {
+        const { nome, unidade, quantidade_estoque, pode_ser_adicional, preco_adicional, quantidade_descontada } = req.body;
+        const { data, error } = await supabase.from('ingredientes').insert({ nome, unidade, quantidade_estoque, pode_ser_adicional, preco_adicional, quantidade_descontada }).select('id').single();
+        if (error) throw error;
+        res.status(201).json({ message: 'Ingrediente adicionado com sucesso!', id: data.id });
+    } catch (error) { 
+        console.error("Erro ao adicionar ingrediente:", error);
+        res.status(500).json({ error: error.message }); 
+    }
+});
+
+app.put('/api/ingredientes/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nome, unidade, quantidade_estoque, pode_ser_adicional, preco_adicional, quantidade_descontada } = req.body;
+        
+        const camposParaAtualizar = { nome, unidade, quantidade_estoque, pode_ser_adicional, preco_adicional, quantidade_descontada };
+        camposParaAtualizar.preco_adicional = pode_ser_adicional ? (preco_adicional || 0) : 0;
+
+        const { error } = await supabase.from('ingredientes').update(camposParaAtualizar).eq('id', id);
+        if (error) throw error;
+        res.status(200).json({ message: 'Ingrediente atualizado com sucesso!' });
+    } catch (error) { 
+        console.error("Erro ao atualizar ingrediente:", error);
+        res.status(500).json({ error: 'Erro interno ao atualizar ingrediente.' }); 
+    }
+});
+
+app.delete('/api/ingredientes/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { error } = await supabase.from('ingredientes').delete().eq('id', id);
+        if (error) throw error;
+        res.status(204).send();
+    } catch (error) { 
+        console.error("Erro ao apagar ingrediente:", error);
+        res.status(500).json({ error: 'Erro interno do servidor' }); 
+    }
+});
 
 
-app.listen(port, () => console.log(`Servidor rodando na porta ${port}`));
+// --- INICIAR SERVIDOR ---
+app.listen(port, () => {
+    console.log(`Servidor rodando na porta ${port}`);
+});
