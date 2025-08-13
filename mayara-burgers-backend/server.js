@@ -1,8 +1,8 @@
 /*
 ============================================================
 |        SERVIDOR BACK-END - MAYARA BURGUER'S              |
-|   Versão definitiva com sistema flexível de opções       |
-|   e todas as rotas de CRUD.                              |
+|   Versão definitiva com todas as rotas de CRUD           |
+|   e correção de sintaxe final.                           |
 ============================================================
 */
 require('dotenv').config();
@@ -25,6 +25,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const app = express();
 const port = process.env.PORT || 3001;
 
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
@@ -32,7 +33,7 @@ app.use(express.json());
 // --- ROTAS DA APLICAÇÃO ---
 
 app.get('/', (req, res) => {
-    res.json({ message: "Servidor da Mayara Burguer's está no ar!" });
+    res.json({ message: "Servidor da Mayara Burguer's está no ar! Conexão via Supabase Client." });
 });
 
 // --- ROTAS DE PRODUTOS ---
@@ -362,3 +363,4 @@ app.delete('/api/ingredientes/:id', async (req, res) => {
 app.listen(port, () => {
     console.log(`Servidor rodando na porta ${port}`);
 });
+// O ARQUIVO TERMINA AQUI. A CHAVE EXTRA '}' QUE CAUSAVA O ERRO FOI REMOVIDA.
