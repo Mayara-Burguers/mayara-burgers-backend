@@ -147,7 +147,6 @@
         }
 
         async function carregarDadosIniciais() {
-            // CORREÇÃO AQUI: As chamadas de API são feitas em paralelo e os resultados são verificados.
             const resultados = await Promise.all([
                 apiRequest('/api/ingredientes'),
                 apiRequest('/api/produtos'),
@@ -179,7 +178,7 @@
         
         async function carregarProdutos() {
             containers.produtos.innerHTML = '<p>Carregando produtos...</p>';
-            if (!todosOsProdutos) { containers.produtos.innerHTML = '<p class="text-danger">Não foi possível carregar os produtos.</p>'; return; }
+             if (!todosOsProdutos) { containers.produtos.innerHTML = '<p class="text-danger">Não foi possível carregar os produtos.</p>'; return; }
             const table = document.createElement('table');
             table.className = 'table table-hover align-middle';
             table.innerHTML = `<thead><tr><th>Nome</th><th>Categoria</th><th>Preço Base</th><th class="text-end">Ações</th></tr></thead><tbody>${todosOsProdutos.map(p => `<tr data-produto='${JSON.stringify(p)}'><td>${p.nome}</td><td>${p.categorias.nome}</td><td>${parseFloat(p.preco_base).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td><td class="text-end"><button class="btn btn-sm btn-outline-primary btn-acao btn-editar-produto"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline-danger btn-acao btn-excluir-produto" data-id="${p.id}"><i class="fas fa-trash"></i></button></td></tr>`).join('')}</tbody>`;
@@ -236,7 +235,6 @@
         async function carregarGruposOpcoes() {
             const accordionContainer = document.getElementById('grupos-opcoes-accordion');
             accordionContainer.innerHTML = '<p>Carregando...</p>';
-            
             if (todosOsGruposOpcoes.length === 0) {
                 accordionContainer.innerHTML = '<p class="text-muted">Nenhum grupo de opções criado.</p>';
                 return;
@@ -278,9 +276,11 @@
             if (!grupo) return;
             let precosSalvos = {};
             if (produtoId) {
-                const produtoComOpcoes = await apiRequest(`/api/produtos/${produtoId}/opcoes`);
-                if (produtoComOpcoes && produtoComOpcoes.opcoes) {
-                    produtoComOpcoes.opcoes.forEach(opt => { precosSalvos[opt.id] = opt.preco; });
+                // Para pegar os preços, buscamos direto na fonte: o objeto completo do produto.
+                const produtoCompleto = todosOsProdutos.find(p => p.id == produtoId);
+                const opcoesSalvas = await apiRequest(`/api/produtos/${produtoId}/opcoes`);
+                if (opcoesSalvas && opcoesSalvas.opcoes) {
+                    opcoesSalvas.opcoes.forEach(opt => { precosSalvos[opt.id] = opt.preco; });
                 }
             }
             let html = `<hr class="my-4"><h6 class="mb-3">Preços para Opções de "${grupo.nome}"</h6>`;
@@ -362,7 +362,7 @@
             if(dC){const i=dC.dataset.id,n=dC.closest('tr').cells[0].textContent;if(confirm(`Excluir "${n}"?`)){await apiRequest(`/api/categorias/${i}`,'DELETE');await carregarDadosIniciais();carregarCategorias()}}
             if(bGrupo){const i=bGrupo.dataset.id;if(confirm('Excluir este grupo e todas as suas opções?')){await apiRequest(`/api/grupos_opcoes/${i}`,'DELETE');await carregarDadosIniciais();carregarGruposOpcoes()}}
             if(bOpcao){const i=bOpcao.dataset.id;if(confirm('Excluir esta opção?')){await apiRequest(`/api/opcoes/${i}`,'DELETE');await carregarDadosIniciais();carregarGruposOpcoes()}}
-            if(bAddOpcao){const i=bAddOpcao.dataset.grupoId;const n=bAddOpcao.previousElementSibling.value.trim();if(n){await apiRequest('/api/opcoes','POST',{grupo_id:i,nome:n});await carregarDadosIniciais();carregarGruposOpcoes()}}
+            if(bAddOpcao){const i=bAddOpcao.dataset.grupoId;const n=bAddOpcao.previousElementSibling.value.trim();if(n){await apiRequest('/api/opcoes','POST',{grupo_id:i,nome:n});await carregarDadosIniciais();carregarGruposOpcoes();bAddOpcao.previousElementSibling.value=''}}
         });
 
         document.getElementById('btn-add-novo-grupo').addEventListener('click', async () => {
