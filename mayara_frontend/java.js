@@ -1,9 +1,9 @@
 /*
-============================================================
-| JAVASCRIPT FINAL E COMPLETO - MAYARA BURGUER'S           |
-| Versão com ID do produto adicionado ao carrinho para     |
-| controle de estoque automático.                          |
-============================================================
+================================================================
+| JAVASCRIPT FINAL E COMPLETO - MAYARA BURGUER'S               |
+| Versão com sistema dinâmico de "Grupos de Opções" para       |
+| personalização de produtos no cardápio.                      |
+================================================================
 */
 document.addEventListener("DOMContentLoaded", async () => {
 
@@ -15,7 +15,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const modalGenericoEl = document.getElementById('modalGenerico');
     const modalGenerico = new bootstrap.Modal(modalGenericoEl);
 
-    // Variáveis globais para guardar os dados vindos do servidor
     let todosOsProdutos = [];
     let listaDeAdicionais = [];
 
@@ -32,8 +31,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (btnSimpleAdd) {
             const itemData = JSON.parse(btnSimpleAdd.dataset.item);
-            // Adiciona o item simples ao carrinho (já com o ID)
-            adicionarAoCarrinho({ id: itemData.id, name: itemData.nome, price: itemData.preco, quantity: 1, extras: [], notes: '' });
+            adicionarAoCarrinho({ id: itemData.id, name: itemData.nome, price: itemData.preco, quantity: 1, opcao: null, extras: [], notes: '' });
         }
     });
 
@@ -58,18 +56,26 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // 3. CARREGAMENTO DE DADOS
+    async function apiRequest(endpoint) {
+        try {
+            const response = await fetch(`${BASE_URL}${endpoint}`);
+            if (!response.ok) throw new Error(`Erro na rede: ${response.statusText}`);
+            return await response.json();
+        } catch(error) {
+            console.error(`Falha ao buscar dados de ${endpoint}:`, error);
+            return null;
+        }
+    }
+    
     async function carregarDadosIniciais() {
         try {
-            const [responseProdutos, responseAdicionais] = await Promise.all([
-                fetch(`${BASE_URL}/api/produtos`),
-                fetch(`${BASE_URL}/api/adicionais`)
+            [todosOsProdutos, listaDeAdicionais] = await Promise.all([
+                apiRequest('/api/produtos'),
+                apiRequest('/api/adicionais')
             ]);
 
-            if (!responseProdutos.ok) throw new Error(`Erro ao buscar produtos: ${responseProdutos.statusText}`);
-            if (!responseAdicionais.ok) throw new Error(`Erro ao buscar adicionais: ${responseAdicionais.statusText}`);
-            
-            todosOsProdutos = await responseProdutos.json();
-            listaDeAdicionais = await responseAdicionais.json();
+            if (!todosOsProdutos) throw new Error('Falha ao carregar produtos.');
+            if (!listaDeAdicionais) listaDeAdicionais = [];
 
             renderizarMenu();
 
@@ -90,10 +96,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         navContainer.innerHTML = '';
         
         const chavesOrdenadas = Object.keys(categorias).sort((a, b) => {
-            const produtoA = categorias[a][0];
-            const produtoB = categorias[b][0];
-            const ordemA = produtoA.categorias ? produtoA.categorias.ordem : 99;
-            const ordemB = produtoB.categorias ? produtoB.categorias.ordem : 99;
+            const ordemA = categorias[a][0]?.categorias?.ordem ?? 99;
+            const ordemB = categorias[b][0]?.categorias?.ordem ?? 99;
             return ordemA - ordemB;
         });
         
@@ -107,30 +111,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             section.className = 'categoria';
             if (!first) section.style.display = 'none';
 
-            let produtosHtml = `<h2 class="text-center mb-4">${nomeCategoria}</h2>`;
-
-            if (nomeCategoria === 'Bebidas' || nomeCategoria === 'Pastéis') {
-                 const subcategorias = categorias[nomeCategoria].reduce((acc, produto) => {
-                    const subcatNome = produto.subcategoria || 'Outros';
-                    (acc[subcatNome] = acc[subcatNome] || []).push(produto);
-                    return acc;
-                }, {});
-
-                for (const nomeSubcat in subcategorias) {
-                    produtosHtml += `<h4 class="text-center text-muted mb-3 mt-4">${nomeSubcat}</h4><div class="row g-4">`;
-                    subcategorias[nomeSubcat].forEach(produto => {
-                        produtosHtml += criarCardProduto(produto);
-                    });
-                    produtosHtml += `</div>`;
-                }
-            } else {
-                produtosHtml += `<div class="row g-4">`;
-                categorias[nomeCategoria].forEach(produto => {
-                    produtosHtml += criarCardProduto(produto);
-                });
-                produtosHtml += `</div>`;
-            }
-
+            let produtosHtml = `<h2 class="text-center mb-4">${nomeCategoria}</h2><div class="row g-4">`;
+            categorias[nomeCategoria].forEach(produto => {
+                produtosHtml += criarCardProduto(produto);
+            });
+            produtosHtml += `</div>`;
+            
             section.innerHTML = produtosHtml;
             menuContainer.appendChild(section);
             first = false;
@@ -138,32 +124,41 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function criarCardProduto(produto) {
-        const nomeCategoria = produto.categorias ? produto.categorias.nome : '';
+        const permiteAdicionais = produto.categorias ? produto.categorias.permite_adicionais : false;
+        const temGrupoOpcoes = produto.categorias ? produto.categorias.grupo_opcoes_id : false;
 
-        // ALTERAÇÃO AQUI: Adicionado 'id: produto.id' ao JSON do data-item
-        const buttonHtml = (nomeCategoria === 'Bebidas' || !produto.categorias.permite_adicionais)
-            ? `<button class="btn btn-sm btn-orange simple-add-btn" data-item='${JSON.stringify({ id: produto.id, nome: produto.nome, preco: produto.preco_base })}'>Adicionar</button>`
-            : `<button class="btn btn-sm btn-orange btn-personalize" data-product-id="${produto.id}"><i class="fas fa-utensils"></i> Personalizar</button>`;
+        const buttonHtml = (permiteAdicionais || temGrupoOpcoes)
+            ? `<button class="btn btn-sm btn-orange btn-personalize" data-product-id="${produto.id}"><i class="fas fa-utensils"></i> Personalizar</button>`
+            : `<button class="btn btn-sm btn-orange simple-add-btn" data-item='${JSON.stringify({ id: produto.id, nome: produto.nome, preco: produto.preco_base })}'>Adicionar</button>`;
         
         return `<div class="col-md-6 col-lg-4"><div class="card item h-100"><img src="${produto.imagem_url || 'placeholder.jpg'}" class="card-img-top" alt="${produto.nome}"><div class="card-body d-flex flex-column"><h3 class="card-title">${produto.nome}</h3><p class="card-text">${produto.descricao || ''}</p><div class="d-flex justify-content-between align-items-center mt-auto"><span class="price">${parseFloat(produto.preco_base).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>${buttonHtml}</div></div></div></div>`;
     }
 
     // 4. LÓGICA DO MODAL
-    function preencherEabrirModal(produto) {
+    async function preencherEabrirModal(produto) {
         const modalBody = modalGenericoEl.querySelector('.modal-body');
         modalGenericoEl.querySelector('.nome-lanche').textContent = produto.nome;
+        modalGenericoEl.dataset.produtoId = produto.id;
         
-        // ALTERAÇÃO AQUI: Armazena o ID do produto no modal para uso posterior
-        modalGenericoEl.dataset.produtoId = produto.id; 
-        
-        const categoriaInfo = produto.categorias;
-        
-        let htmlPao = (categoriaInfo && (categoriaInfo.nome === 'Lanches' || categoriaInfo.nome === 'Hambúrgueres'))
-            ? `<div class="option-group"><div class="option-title"><i class="fas fa-bread-slice"></i> Tipo de Pão</div><div class="form-check"><input class="form-check-input" type="radio" name="paoGenerico" id="paoPadrao" value="${produto.preco_base}" checked data-nome="Pão de Hambúrguer"><label class="form-check-label" for="paoPadrao">Pão de Hambúrguer (Padrão) - ${parseFloat(produto.preco_base).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</label></div>${produto.preco_pao_especial ? `<div class="form-check"><input class="form-check-input" type="radio" name="paoGenerico" id="paoFrances" value="${produto.preco_pao_especial}" data-nome="Pão Francês"><label class="form-check-label" for="paoFrances">Pão Francês - ${parseFloat(produto.preco_pao_especial).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</label></div><div class="form-check"><input class="form-check-input" type="radio" name="paoGenerico" id="paoEspecial" value="${produto.preco_pao_especial}" data-nome="Pão Especial"><label class="form-check-label" for="paoEspecial">Pão Especial - ${parseFloat(produto.preco_pao_especial).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</label></div>` : ''}${produto.preco_pao_baby ? `<div class="form-check"><input class="form-check-input" type="radio" name="paoGenerico" id="paoBaby" value="${produto.preco_pao_baby}" data-nome="Pão Baby"><label class="form-check-label" for="paoBaby">Pão Baby - ${parseFloat(produto.preco_pao_baby).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</label></div>` : ''}</div>`
-            : '';
+        const [opcoesData, adicionaisDisponiveis] = await Promise.all([
+            apiRequest(`/api/produtos/${produto.id}/opcoes`),
+            produto.categorias.permite_adicionais ? apiRequest(`/api/adicionais`) : Promise.resolve([])
+        ]);
 
+        let htmlOpcoes = '';
+        if (opcoesData && opcoesData.opcoes && opcoesData.opcoes.length > 0) {
+            htmlOpcoes = `<div class="option-group"><div class="option-title"><i class="fas fa-cogs"></i> ${opcoesData.grupo_nome}</div>`;
+            opcoesData.opcoes.forEach((opcao, index) => {
+                htmlOpcoes += `<div class="form-check">
+                    <input class="form-check-input" type="radio" name="grupoOpcao" id="opcao-${opcao.id}" value="${opcao.preco}" ${index === 0 ? 'checked' : ''} data-nome="${opcao.nome}" data-grupo-nome="${opcoesData.grupo_nome}">
+                    <label class="form-check-label" for="opcao-${opcao.id}">${opcao.nome} - ${parseFloat(opcao.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</label>
+                </div>`;
+            });
+            htmlOpcoes += `</div>`;
+        }
+        
         let htmlAdicionais = '';
-        if (categoriaInfo && categoriaInfo.permite_adicionais === true && listaDeAdicionais.length > 0) {
+        if (adicionaisDisponiveis && adicionaisDisponiveis.length > 0) {
             htmlAdicionais = `<div class="option-group"><div class="option-title"><i class="fas fa-plus-circle"></i> Adicionais</div><p class="text-muted small mb-2">Limite de 10 adicionais no total.</p><div class="adicional-section">`;
             listaDeAdicionais.forEach((adicional, index) => {
                 const precoAdicional = parseFloat(adicional.preco_adicional || 0);
@@ -172,36 +167,26 @@ document.addEventListener("DOMContentLoaded", async () => {
             htmlAdicionais += `</div></div>`;
         }
         
-        let htmlObservacoes = `<div class="option-group"><div class="option-title"><i class="fas fa-edit"></i> Observações</div><textarea class="observacoes-textarea form-control" placeholder="Ex: Sem cebola..."></textarea></div>`;
+        const htmlObservacoes = `<div class="option-group"><div class="option-title"><i class="fas fa-edit"></i> Observações</div><textarea class="observacoes-textarea form-control" placeholder="Ex: Sem cebola..."></textarea></div>`;
         
-        modalBody.innerHTML = htmlPao + htmlAdicionais + htmlObservacoes + `<div class="current-price">Total: <span class="preco-final">0,00</span></div>`;
+        modalBody.innerHTML = htmlOpcoes + htmlAdicionais + htmlObservacoes + `<div class="current-price">Total: <span class="preco-final"></span></div>`;
         
-        if (!htmlPao) {
-            modalGenericoEl.dataset.baseprice = produto.preco_base;
-        }
-        
-        atualizarPreco(modalGenericoEl);
+        atualizarPreco(modalGenericoEl, produto.preco_base);
         modalGenerico.show();
     }
     
     function contarAdicionais(modal) {
         let total = 0;
-        modal.querySelectorAll('.adicional-quantidade').forEach(input => {
-            total += parseInt(input.value) || 0;
-        });
+        modal.querySelectorAll('.adicional-quantidade').forEach(input => { total += parseInt(input.value) || 0; });
         return total;
     }
 
     modalGenericoEl.addEventListener('change', e => {
-        if (e.target.matches('.adicional-checkbox, input[name="paoGenerico"]')) {
+        if (e.target.matches('.adicional-checkbox, input[name="grupoOpcao"]')) {
             if (e.target.matches('.adicional-checkbox')) {
                 const quantidadeInput = e.target.nextElementSibling.nextElementSibling;
                 if (e.target.checked) {
-                    if (contarAdicionais(modalGenericoEl) >= 10) {
-                        e.target.checked = false;
-                        alert("Você pode escolher no máximo 10 adicionais!");
-                        return;
-                    }
+                    if (contarAdicionais(modalGenericoEl) >= 10) { e.target.checked = false; alert("Limite de 10 adicionais!"); return; }
                     quantidadeInput.disabled = false;
                     quantidadeInput.value = 1;
                 } else {
@@ -215,29 +200,24 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     modalGenericoEl.addEventListener('input', e => {
         if (e.target.matches('.adicional-quantidade')) {
-            const inputAtual = e.target;
             let totalAtual = contarAdicionais(modalGenericoEl);
-
             if (totalAtual > 10) {
                 alert("Limite de 10 adicionais atingido!");
                 const excedente = totalAtual - 10;
-                inputAtual.value = Math.max(0, parseInt(inputAtual.value) - excedente);
+                e.target.value = Math.max(0, parseInt(e.target.value) - excedente);
             }
         }
         atualizarPreco(modalGenericoEl);
     });
 
-    function atualizarPreco(modal) {
-        const paoSelecionado = modal.querySelector('input[name="paoGenerico"]:checked');
-        let total = paoSelecionado ? parseFloat(paoSelecionado.value) : parseFloat(modal.dataset.baseprice || 0);
+    function atualizarPreco(modal, precoBaseOriginal) {
+        const opcaoSelecionada = modal.querySelector('input[name="grupoOpcao"]:checked');
+        let total = opcaoSelecionada ? parseFloat(opcaoSelecionada.value) : parseFloat(precoBaseOriginal || 0);
 
         modal.querySelectorAll('.adicional-item').forEach(item => {
              total += (parseInt(item.querySelector('.adicional-quantidade').value) || 0) * (parseFloat(item.querySelector('.adicional-quantidade').dataset.price) || 0);
         });
-        const precoFinalEl = modal.querySelector('.preco-final');
-        if (precoFinalEl) {
-           precoFinalEl.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        }
+        modal.querySelector('.preco-final').textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
     // 5. GESTÃO DO CARRINHO
@@ -249,23 +229,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         renderizarCarrinho();
     }
     
-    // ALTERAÇÃO AQUI: Pega o ID do produto e adiciona ao objeto do carrinho
     document.querySelector('#modalGenerico .btn-add-custom').addEventListener('click', function () {
         const modal = this.closest('.modal-personalizacao');
         const produtoId = parseInt(modalGenericoEl.dataset.produtoId); 
-        
         const nomeProduto = modal.querySelector('.nome-lanche').textContent.trim();
         const precoText = modal.querySelector('.preco-final').textContent;
-        const preco = parseFloat(precoText.replace('R$', '').replace('.', '').replace(',', '.').trim());
+        const preco = parseFloat(precoText.replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
+        
+        const opcaoEl = modal.querySelector('input[name="grupoOpcao"]:checked');
+        const opcao = opcaoEl ? { grupo: opcaoEl.dataset.grupoNome, nome: opcaoEl.dataset.nome } : null;
 
-        const paoEl = modal.querySelector('input[name="paoGenerico"]:checked');
-        const pao = paoEl ? paoEl.dataset.nome : 'Padrão';
         const adicionais = Array.from(modal.querySelectorAll('.adicional-quantidade')).filter(i => i.value > 0).map(i => `${i.value}x ${i.dataset.nome}`);
-        const observacoesTextarea = modal.querySelector('.observacoes-textarea');
-        const notes = observacoesTextarea ? observacoesTextarea.value.trim() : '';
+        const notes = modal.querySelector('.observacoes-textarea')?.value.trim() || '';
         
-        adicionarAoCarrinho({ id: produtoId, name: nomeProduto, bread: pao, extras: adicionais, notes, quantity: 1, price: preco });
-        
+        adicionarAoCarrinho({ id: produtoId, name: nomeProduto, opcao: opcao, extras: adicionais, notes, quantity: 1, price: preco });
         modalGenerico.hide();
     });
     
@@ -277,22 +254,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         
         container.innerHTML = carrinho.length === 0 ? '<p class="text-muted">Seu carrinho está vazio.</p>' : '';
         if (carrinho.length > 0) {
-            let tabela = `<table class="table"><thead><tr><th>Item</th><th>Qtd</th><th>Preço</th><th></th></tr></thead><tbody>`;
+            let html = '';
             carrinho.forEach((item, index) => {
                 total += item.price * item.quantity;
-                tabela += `<tr><td><strong>${item.name}</strong><br>${(item.bread && item.bread !== 'Padrão') ? `<small>Pão: ${item.bread}</small><br>` : ''}${item.extras?.length > 0 ? `<small>+ ${item.extras.join(", ")}</small><br>` : ''}${item.notes ? `<small>Obs: ${item.notes}</small><br>` : ''}</td><td>${item.quantity}</td><td>${item.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td><td><button class="btn btn-sm btn-danger btn-remover" data-index="${index}">🗑️</button></td></tr>`;
+                html += `<div class="cart-item"><span>${item.quantity}x ${item.name}</span><span>${item.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}<button class="btn btn-sm btn-danger btn-remover ms-2" data-index="${index}">🗑️</button></span></div>`;
+                if(item.opcao) html += `<div class="cart-item-details">${item.opcao.grupo}: ${item.opcao.nome}</div>`;
+                if(item.extras && item.extras.length > 0) html += `<div class="cart-item-details">+ ${item.extras.join(", ")}</div>`;
+                if(item.notes) html += `<div class="cart-item-details">Obs: ${item.notes}</div>`;
             });
-            tabela += `</tbody></table>`;
-            container.innerHTML = tabela;
+            container.innerHTML = html;
         }
         
         const sacheQtd = parseInt(localStorage.getItem("sachesAlho")) || 0;
-        if (sacheQtd > 0) {
-            const alhoPrecoTotal = sacheQtd * 1.00;
-            total += alhoPrecoTotal;
-            container.innerHTML += `<div class="mt-2" style="border-top: 1px dashed #ccc; padding-top: 10px;"><strong>Sachês de Alho:</strong> ${sacheQtd} x R$ 1,00 = ${alhoPrecoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>`;
-        }
-        
+        if (sacheQtd > 0) { total += sacheQtd * 1.00; }
         totalSpan.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         atualizarQuantidadeIcone();
     }
@@ -317,43 +291,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         const modalClienteEl = document.getElementById("modalDadosCliente");
         if (!modalClienteEl) return;
         const modalCliente = new bootstrap.Modal(modalClienteEl);
-        const deliveryRadio = document.getElementById("entregaDelivery");
-        const retiradaRadio = document.getElementById("entregaRetirada");
-        const campoEndereco = document.getElementById("campo-endereco-wrapper");
-        const incluirMolhosCheckbox = document.getElementById("incluirMolhos");
-        const opcoesMolhosIndividuais = document.getElementById("opcoesMolhosIndividuais");
-        const quantidadeAlhoInput = document.getElementById("quantidadeAlho");
-
-        function atualizarVisibilidadeEndereco() {
-            if (!campoEndereco) return;
-            const tipoEntrega = localStorage.getItem("tipoEntrega") || 'delivery';
-            if (tipoEntrega === 'retirada') {
-                campoEndereco.style.display = "none";
-                if(document.getElementById("inputEnderecoCliente")) document.getElementById("inputEnderecoCliente").required = false;
-            } else {
-                campoEndereco.style.display = "block";
-                if(document.getElementById("inputEnderecoCliente")) document.getElementById("inputEnderecoCliente").required = true;
-            }
-        }
-
-        if (deliveryRadio && retiradaRadio) {
-            [deliveryRadio, retiradaRadio].forEach(radio => {
-                radio.addEventListener("change", function () {
-                    if (this.checked) localStorage.setItem("tipoEntrega", this.value);
-                    atualizarVisibilidadeEndereco();
-                });
-            });
-            const tipoEntregaSalvo = localStorage.getItem("tipoEntrega") || 'delivery';
-            if (tipoEntregaSalvo === 'retirada') retiradaRadio.checked = true;
-            else deliveryRadio.checked = true;
-            atualizarVisibilidadeEndereco();
-        }
         
         function verificarDadosCliente() {
             const nomeSalvo = localStorage.getItem("nomeCliente");
             const telefoneSalvo = localStorage.getItem("telefoneCliente");
             const enderecoSalvo = localStorage.getItem("enderecoCliente");
-            const precisaEndereco = (localStorage.getItem("tipoEntrega") || 'delivery') === 'delivery';
+            const precisaEndereco = document.getElementById("entregaDelivery").checked;
 
             if (!nomeSalvo || !telefoneSalvo || (precisaEndereco && !enderecoSalvo)) {
                 modalCliente.show();
@@ -366,14 +309,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             const nome = document.getElementById("inputNomeCliente").value.trim();
             const telefone = document.getElementById("inputTelefoneCliente").value.trim();
             const endereco = document.getElementById("inputEnderecoCliente").value.trim();
-            const tipoEntregaAtual = localStorage.getItem("tipoEntrega") || 'delivery';
-            if (!nome || !telefone || (tipoEntregaAtual === 'delivery' && !endereco)) {
+            const precisaEndereco = document.getElementById("entregaDelivery").checked;
+            if (!nome || !telefone || (precisaEndereco && !endereco)) {
                 alert("Preencha todos os campos obrigatórios.");
                 return;
             }
             localStorage.setItem("nomeCliente", nome);
             localStorage.setItem("telefoneCliente", telefone);
-            if (tipoEntregaAtual === 'delivery') localStorage.setItem("enderecoCliente", endereco);
+            if (precisaEndereco) localStorage.setItem("enderecoCliente", endereco);
             else localStorage.removeItem("enderecoCliente");
             modalCliente.hide();
             document.getElementById("btn-enviar-whatsapp").click();
@@ -383,7 +326,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (!verificarDadosCliente()) return;
 
             const carrinho = JSON.parse(localStorage.getItem("cart")) || [];
-            const sachesAlho = parseInt(localStorage.getItem("sachesAlho")) || 0;
+            const sachesAlho = parseInt(document.getElementById("quantidadeAlho").value) || 0;
 
             if (carrinho.length === 0 && sachesAlho === 0) {
                 return alert("Seu carrinho está vazio!");
@@ -393,14 +336,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             totalValue += sachesAlho * 1.00;
             
             const molhosSelecionados = [];
-            if (localStorage.getItem("molhoKetchup") === "true") molhosSelecionados.push("Ketchup");
-            if (localStorage.getItem("molhoMostarda") === "true") molhosSelecionados.push("Mostarda");
-            if (localStorage.getItem("molhoMaionese") === "true") molhosSelecionados.push("Maionese");
+            if (document.getElementById("molhoKetchup")?.checked) molhosSelecionados.push("Ketchup");
+            if (document.getElementById("molhoMostarda")?.checked) molhosSelecionados.push("Mostarda");
+            if (document.getElementById("molhoMaionese")?.checked) molhosSelecionados.push("Maionese");
 
             const pedidoParaEnviar = {
                 cliente_nome: localStorage.getItem("nomeCliente"),
                 cliente_telefone: localStorage.getItem("telefoneCliente"),
-                tipo_entrega: localStorage.getItem("tipoEntrega") || 'delivery',
+                tipo_entrega: document.getElementById("entregaDelivery").checked ? 'delivery' : 'retirada',
                 cliente_endereco: localStorage.getItem("enderecoCliente") || null,
                 itens: carrinho,
                 valor_total: totalValue,
@@ -414,13 +357,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(pedidoParaEnviar)
                 });
-                if (!response.ok) {
-                    const errData = await response.json();
-                    throw new Error(errData.error || 'Falha ao registrar o pedido.');
-                }
                 
                 const resultado = await response.json();
-                alert(`Seu pedido Nº ${resultado.pedidoId} foi recebido! Agora vamos te redirecionar ao WhatsApp para confirmar.`);
+
+                if (!response.ok) {
+                    throw new Error(resultado.error || 'Falha ao registrar o pedido.');
+                }
+                
+                alert(`Seu pedido Nº ${resultado.pedidoId} foi recebido! Vamos te redirecionar ao WhatsApp para confirmar.`);
 
                 const dataHora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
                 let mensagemWhats = `*Novo Pedido: Nº ${resultado.pedidoId}*%0A*Data/Hora:* ${dataHora}%0A%0A*Cliente:* ${pedidoParaEnviar.cliente_nome}%0A`;
@@ -434,7 +378,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 mensagemWhats += `%0A*--- ITENS ---*%0A`;
                 pedidoParaEnviar.itens.forEach(item => {
                     mensagemWhats += `*${item.quantity}x ${item.name}* (${item.price.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})})%0A`;
-                    if (item.bread && item.bread !== 'Padrão' && item.bread !== 'Pão de Hambúrguer') mensagemWhats += `  - Pão: ${item.bread}%0A`;
+                    if(item.opcao) mensagemWhats += `  - ${item.opcao.grupo}: ${item.opcao.nome}%0A`;
                     if (item.extras && item.extras.length > 0) mensagemWhats += `  - Adicionais: ${item.extras.join(', ')}%0A`;
                     if (item.notes) mensagemWhats += `  - Obs: ${item.notes}%0A`;
                 });
@@ -445,17 +389,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                 
                 window.open("https://wa.me/5512992050080?text=" + mensagemWhats, '_blank');
                 
-                // Limpa o localStorage para um novo pedido
                 localStorage.removeItem("cart");
-                localStorage.removeItem("sachesAlho");
-                localStorage.removeItem("molhoKetchup");
-                localStorage.removeItem("molhoMostarda");
-                localStorage.removeItem("molhoMaionese");
+                localStorage.setItem("sachesAlho", "0");
                 
-                if(incluirMolhosCheckbox) incluirMolhosCheckbox.checked = false;
-                if(opcoesMolhosIndividuais) opcoesMolhosIndividuais.style.display = 'none';
+                document.getElementById("incluirMolhos").checked = false;
+                document.getElementById("opcoesMolhosIndividuais").style.display = 'none';
                 document.querySelectorAll('#opcoesMolhosIndividuais input').forEach(c => c.checked = false);
-                if(quantidadeAlhoInput) quantidadeAlhoInput.value = 0;
+                document.getElementById("quantidadeAlho").value = 0;
 
                 renderizarCarrinho();
 
@@ -465,20 +405,27 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
         
-        incluirMolhosCheckbox?.addEventListener("change", function () {
-            opcoesMolhosIndividuais.style.display = this.checked ? "block" : "none";
+        document.getElementById("incluirMolhos")?.addEventListener("change", function () {
+            document.getElementById("opcoesMolhosIndividuais").style.display = this.checked ? "block" : "none";
         });
-
-        document.querySelectorAll('#opcoesMolhosIndividuais input[type="checkbox"]').forEach(checkbox => {
-            checkbox.addEventListener("change", function () {
-                localStorage.setItem(this.id, this.checked);
-            });
-        });
-
-        quantidadeAlhoInput?.addEventListener("input", function () {
+        
+        document.getElementById("quantidadeAlho")?.addEventListener("input", function () {
             localStorage.setItem("sachesAlho", this.value);
             renderizarCarrinho();
         });
+
+        document.querySelectorAll('input[name="tipoEntrega"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                localStorage.setItem('tipoEntrega', this.value);
+                const wrapper = document.getElementById('campo-endereco-wrapper');
+                if (wrapper) wrapper.style.display = this.value === 'delivery' ? 'block' : 'none';
+            });
+        });
+        
+        const tipoEntregaSalvo = localStorage.getItem('tipoEntrega') || 'delivery';
+        if (tipoEntregaSalvo === 'retirada') document.getElementById('entregaRetirada').checked = true;
+        else document.getElementById('entregaDelivery').checked = true;
+        document.getElementById('campo-endereco-wrapper').style.display = tipoEntregaSalvo === 'delivery' ? 'block' : 'none';
     })();
     
     // 7. INICIALIZAÇÃO DA PÁGINA
