@@ -35,7 +35,7 @@
             <div class="tab-pane fade show active" id="pedidos-pane" role="tabpanel">
                 <div class="p-3">
                     <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h4">Histórico de Pedidos</h2><button id="btn-recarregar-pedidos" class="btn btn-sm btn-outline-primary"><i class="fas fa-sync-alt"></i> Recarregar</button></div>
-                    <div id="pedidos-container"></div>
+                    <div id="pedidos-container"><p>Carregando...</p></div>
                 </div>
             </div>
 
@@ -147,12 +147,17 @@
         }
 
         async function carregarDadosIniciais() {
-            [todosOsIngredientes, todosOsProdutos, todasAsCategorias, todosOsGruposOpcoes] = await Promise.all([
-                apiRequest('/api/ingredientes') || [],
-                apiRequest('/api/produtos') || [],
-                apiRequest('/api/categorias') || [],
-                apiRequest('/api/grupos_opcoes') || []
+            // CORREÇÃO AQUI: As chamadas de API são feitas em paralelo e os resultados são verificados.
+            const resultados = await Promise.all([
+                apiRequest('/api/ingredientes'),
+                apiRequest('/api/produtos'),
+                apiRequest('/api/categorias'),
+                apiRequest('/api/grupos_opcoes')
             ]);
+            todosOsIngredientes = resultados[0] || [];
+            todosOsProdutos = resultados[1] || [];
+            todasAsCategorias = resultados[2] || [];
+            todosOsGruposOpcoes = resultados[3] || [];
         }
         
         async function carregarPedidos() {
@@ -174,7 +179,7 @@
         
         async function carregarProdutos() {
             containers.produtos.innerHTML = '<p>Carregando produtos...</p>';
-             if (!todosOsProdutos) { containers.produtos.innerHTML = '<p class="text-danger">Não foi possível carregar os produtos.</p>'; return; }
+            if (!todosOsProdutos) { containers.produtos.innerHTML = '<p class="text-danger">Não foi possível carregar os produtos.</p>'; return; }
             const table = document.createElement('table');
             table.className = 'table table-hover align-middle';
             table.innerHTML = `<thead><tr><th>Nome</th><th>Categoria</th><th>Preço Base</th><th class="text-end">Ações</th></tr></thead><tbody>${todosOsProdutos.map(p => `<tr data-produto='${JSON.stringify(p)}'><td>${p.nome}</td><td>${p.categorias.nome}</td><td>${parseFloat(p.preco_base).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td><td class="text-end"><button class="btn btn-sm btn-outline-primary btn-acao btn-editar-produto"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline-danger btn-acao btn-excluir-produto" data-id="${p.id}"><i class="fas fa-trash"></i></button></td></tr>`).join('')}</tbody>`;
@@ -231,6 +236,7 @@
         async function carregarGruposOpcoes() {
             const accordionContainer = document.getElementById('grupos-opcoes-accordion');
             accordionContainer.innerHTML = '<p>Carregando...</p>';
+            
             if (todosOsGruposOpcoes.length === 0) {
                 accordionContainer.innerHTML = '<p class="text-muted">Nenhum grupo de opções criado.</p>';
                 return;
