@@ -276,11 +276,9 @@
             if (!grupo) return;
             let precosSalvos = {};
             if (produtoId) {
-                // Para pegar os preços, buscamos direto na fonte: o objeto completo do produto.
-                const produtoCompleto = todosOsProdutos.find(p => p.id == produtoId);
-                const opcoesSalvas = await apiRequest(`/api/produtos/${produtoId}/opcoes`);
-                if (opcoesSalvas && opcoesSalvas.opcoes) {
-                    opcoesSalvas.opcoes.forEach(opt => { precosSalvos[opt.id] = opt.preco; });
+                const produtoComOpcoes = await apiRequest(`/api/produtos/${produtoId}/opcoes`);
+                if (produtoComOpcoes && produtoComOpcoes.opcoes) {
+                    produtoComOpcoes.opcoes.forEach(opt => { precosSalvos[opt.id] = opt.preco; });
                 }
             }
             let html = `<hr class="my-4"><h6 class="mb-3">Preços para Opções de "${grupo.nome}"</h6>`;
