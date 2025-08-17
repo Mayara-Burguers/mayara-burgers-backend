@@ -112,7 +112,22 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', async () => {
+        console.log("DEBUG: O script do admin.html começou a rodar!");
         const BASE_URL = 'https://mayara-backend-servidor.onrender.com';
+        // ===== CÓDIGO DE DIAGNÓSTICO =====
+console.log("DEBUG: Verificando a existência dos botões antes de adicionar eventos...");
+
+const btnSalvarReceita = document.getElementById('btn-salvar-receita');
+console.log("DEBUG: Botão 'btn-salvar-receita' encontrado:", btnSalvarReceita);
+
+const btnAddReceita = document.getElementById('btn-add-ingrediente-receita');
+console.log("DEBUG: Botão 'btn-add-ingrediente-receita' encontrado:", btnAddReceita);
+
+const btnAdicionarIngrediente = document.getElementById('btn-adicionar-ingrediente');
+console.log("DEBUG: Botão 'btn-adicionar-ingrediente' encontrado:", btnAdicionarIngrediente);
+
+console.log("DEBUG: Verificação concluída. Tentando adicionar eventos agora.");
+// ===================================
         const modalProduto = new bootstrap.Modal(document.getElementById('modalProduto'));
         const modalIngrediente = new bootstrap.Modal(document.getElementById('modalIngrediente'));
         const modalCategoria = new bootstrap.Modal(document.getElementById('modalCategoria'));
@@ -386,3 +401,4 @@
     </script>
 </body>
 </html>
+
