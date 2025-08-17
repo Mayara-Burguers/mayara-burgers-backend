@@ -248,7 +248,7 @@
             const selectCategoria = document.getElementById('produto-categoria');
             selectCategoria.innerHTML = '<option value="">Selecione...</option>';
             todasAsCategorias.forEach(c => {
-                selectCategoria.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
+                selectCategoria.innerHTML += `<option value="${c.id}" data-grupo-id="${c.grupo_opcoes_id || ''}">${c.nome}</option>`;
             });
             if (produto) {
                 document.getElementById('modalProdutoTitle').textContent = 'Editar Produto';
